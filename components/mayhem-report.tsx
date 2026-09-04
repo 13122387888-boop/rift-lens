@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChampionIcon, TrendChart } from "./analytics";
 import { PersonaDetails } from "./player-persona";
 import { mayhemReport, reportText, type ReportStyle, type MayhemReport } from "@/lib/mayhem-report";
+import { savePng } from "@/lib/save-image";
 import { makeReportPng, type CardOptions } from "@/lib/report-image";
 import type { Match, Snapshot } from "@/lib/model";
 
@@ -24,7 +25,7 @@ function PosterPlaceholder({
     <article className="share-poster poster-placeholder" aria-label="正在准备海斗战报">
       <div className="poster-top">
         <span>对局透镜 / 海斗档案</span>
-        <span>{data.isSample ? "真实样本" : "个人战报"}</span>
+        <span>{data.isSample ? "示例预览" : "个人战报"}</span>
       </div>
       <p className="poster-player">
         {hideName ? "神秘海斗玩家" : data.player.split("#")[0]}
@@ -71,9 +72,11 @@ function PosterPlaceholder({
 export function MayhemReportPanel({
   data,
   onSelect,
+  blocked = false,
 }: {
   data: Snapshot;
   onSelect: (r: Match) => void;
+  blocked?: boolean;
 }) {
   const report = useMemo(() => mayhemReport(data), [data]);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -120,33 +123,24 @@ export function MayhemReportPanel({
     };
   }, [options, report.complete]);
   const ready = prepared?.options === options && report.complete;
-  function saveImage() {
-    if (!ready || !prepared) return;
+  async function saveImage() {
+    if (!ready || !prepared || blocked) return;
     const name = hideName
       ? "神秘玩家"
       : data.player
           .split("#")[0]
           .replace(/[^\p{L}\p{N}_-]/gu, "")
           .slice(0, 24) || "玩家";
-    const a = document.createElement("a");
-    a.href = prepared.url;
-    a.download =
-      "海斗" +
-      (style === "highlight" ? "高光" : "战报") +
-      "-" +
-      name +
-      "-" +
-      data.fetchedAt.slice(0, 10) +
-      ".png";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setMessage("已生成 PNG。若未开始下载，可长按上方图片保存。");
+    try {
+      setMessage(await savePng(prepared.blob, prepared.url,
+        (data.isSample ? "示例-" : "") + "海斗" + (style === "highlight" ? "高光" : "玩家卡") + "-" + name + "-" + data.fetchedAt.slice(0, 10) + ".png"));
+    } catch { setMessage("暂时无法保存，请长按上方图片保存。"); }
   }
+
   async function copyImage() {
-    if (!ready || !prepared) return;
+    if (!ready || !prepared || blocked) return;
     if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
-      setMessage("当前浏览器不支持复制图片，请使用“保存战报”。");
+      setMessage("当前浏览器不支持复制图片，请点击保存按钮，或长按上方图片。");
       return;
     }
     setCopying(true);
@@ -154,11 +148,17 @@ export function MayhemReportPanel({
       await navigator.clipboard.write([new ClipboardItem({ "image/png": prepared.blob })]);
       setMessage("图片已复制，可以粘贴到聊天窗口。");
     } catch {
-      setMessage("图片复制未成功，请使用“保存战报”。");
+      setMessage("图片复制未成功，请点击保存按钮，或长按上方图片。");
     } finally {
       setCopying(false);
     }
   }
+  if (!report.rows.length && !data.loading) return (
+    <section id="share-report" className="empty-report">
+      <Swords size={30} /><h2>当前范围暂无海斗战绩</h2>
+      <p>最近返回的对局中没有可生成玩家卡的海斗记录，可以切换模式查看。</p>
+    </section>
+  );
   const preview =
     ready && prepared ? (
       <img
@@ -175,9 +175,7 @@ export function MayhemReportPanel({
     <section className="mayhem-studio" id="share-report">
       <div className="mayhem-intro">
         <div>
-          <p className="eyebrow">ARAM MAYHEM / YOUR MOMENT</p>
-          <h2>这 {report.rows.length} 场，你是哪一派？</h2>
-          <p>把你的英雄口味，做成一张开黑名片。</p>
+          <h2>{data.isSample ? "示例玩家卡" : "你的玩家卡"}</h2>
         </div>
         <span className="mayhem-edition">
           <Sparkles size={16} />
@@ -207,23 +205,23 @@ export function MayhemReportPanel({
           <div className="report-preview" ref={previewRef}>
             <TabsContent value="overview">{preview}</TabsContent>
             <TabsContent value="highlight">{preview}</TabsContent>
-            <p>1080 × 1350 高清 PNG · 长按图片也可保存</p>
+            <p>高清图片 · 可长按保存</p>
             <div className="report-actions">
-              <Button className="save-report" onClick={saveImage} disabled={!ready}>
+              <Button className="save-report" onClick={() => void saveImage()} disabled={!ready || blocked}>
                 <Download size={18} />
                 {style === "overview" ? "保存玩家卡" : "保存高光"}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => void copyImage()}
-                disabled={!ready || copying}
+                disabled={!ready || copying || blocked}
               >
                 {copying ? <LoaderCircle size={17} className="animate-spin" /> : <Copy size={17} />}
                 复制图片
               </Button>
             </div>
             <output className="report-feedback" aria-live="polite">
-              {message ||
+              {blocked ? "查询未完成，暂不能保存；下方图片不代表新的查询结果。" : message ||
                 (data.loading
                   ? "正在逐场补齐详情…"
                   : !report.complete
@@ -234,17 +232,14 @@ export function MayhemReportPanel({
             </output>
           </div>
           <div className="mayhem-story">
-            <p className="eyebrow">SAVE YOUR MOMENT</p>
-            <h3>{style === "overview" ? report.persona.title : "这一局，单独晒。"}</h3>
+            {style === "highlight" && <><h3>这一局，单独晒。</h3>
             <p>
-              {style === "overview"
-                ? report.persona.label + " · " + report.persona.quote
-                : "已选 " +
+              {"已选 " +
                   (selected.row?.champion ?? "—") +
                   " · " +
                   selected.label +
                   "。战报保留实际胜负。"}
-            </p>
+            </p></>}
             {style === "overview" && (
               <details className="persona-more">
                 <summary>查看画像依据与常选的英雄</summary>
@@ -260,7 +255,7 @@ export function MayhemReportPanel({
                 <Button
                   key={h.key}
                   variant="ghost"
-                  disabled={!h.row || !report.complete}
+                  disabled={!h.row || !report.complete || blocked}
                   onClick={() => {
                     setHighlightKey(h.key);
                     setStyle("highlight");
@@ -297,7 +292,7 @@ export function MayhemReportPanel({
             )}
             <p className="mayhem-share-note">
               {report.coverage}
-              。画像来自本次出场英雄，海斗随机选人也会影响结果。
+              。随机选人也会影响画像。
               <a href="#mayhem-rules">查看标签规则</a>
             </p>
           </div>

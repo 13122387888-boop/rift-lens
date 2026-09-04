@@ -43,6 +43,7 @@ import { OptionalAnalysis, ChampionTags } from "@/components/player-persona";
 import { CompanionsPanel } from "@/components/companions";
 import { championRoles, playerPersona, ROLE_INFO } from "@/lib/player-persona";
 import { performance } from "@/lib/performance";
+import { QueryError } from "@/lib/request";
 import { fetchQuery } from "@/lib/query-client";
 import { Progress } from "@/components/ui/progress";
 const initialSample = {
@@ -78,6 +79,16 @@ export default function Home() {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [status, setStatus] = useState("");
+  const [slow, setSlow] = useState(false);
+  const [retryable, setRetryable] = useState(true);
+  const [lastQuery, setLastQuery] = useState<ReturnType<typeof validateQuery> | null>(null);
+  const [receivedCurrent, setReceivedCurrent] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    if (!busy) return;
+    const timer = setTimeout(() => setSlow(true), 8000);
+    return () => clearTimeout(timer);
+  }, [busy]);
   const [metric, setMetric] = useState<"teamElo" | "score">("score");
   const [filter, setFilter] = useState("all"),
     [selected, setSelected] = useState<Match | null>(null);
@@ -97,6 +108,9 @@ export default function Home() {
       setError(message);
       throw new Error(message);
     }
+    setLastQuery(q);
+    setReceivedCurrent(false);
+    setRetryable(true);
     lock.current = true;
     setBusy(true);
     setError("");
@@ -107,8 +121,9 @@ export default function Home() {
       let receivedList = false;
       const result = await fetchQuery(
         q,
-        AbortSignal.any([controller.signal, AbortSignal.timeout(92000)]),
+        controller.signal,
         (snapshot) => {
+          setReceivedCurrent(true);
           setData(snapshot);
           setSelected((previous) =>
             previous ? (snapshot.rows.find((r) => r.id === previous.id) ?? null) : null,
@@ -146,13 +161,19 @@ export default function Home() {
         setArea(q.area);
         setMode(q.mode);
         setCount(String(q.count));
-        setStatus(
-          (result.cache?.queryHit ? "已复用 1 分钟内的查询结果，共 " : "查询完成，已取得 ") +
-            result.rows.length +
-            " 场战绩。" +
-            (result.cache?.detailHits ? "复用 " + result.cache.detailHits + " 场详情。" : ""),
+        const incomplete = result.rows.filter((row) => row.detailState === "unavailable").length;
+        setStatus(!result.rows.length
+          ? "查询完成，当前范围内没有该模式的战绩。"
+          : incomplete
+            ? "已取得 " + result.rows.length + " 场，其中 " + incomplete + " 场详情暂缺。可更新重试。"
+            : (result.cache?.queryHit ? "已读取近期查询结果，" : "查询完成，") + result.rows.length + " 场战绩已就绪。"
+
         );
       });
+      if (result.mode === "mayhem" && result.rows.length && result.rows.every((r) => r.detailState === "ready")) {
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        requestAnimationFrame(() => document.getElementById("share-report")?.scrollIntoView({ behavior: "auto", block: "start" }));
+      }
       return {
         player: result.player,
         area: result.area,
@@ -161,6 +182,7 @@ export default function Home() {
         fetchedAt: result.fetchedAt,
       };
     } catch (e) {
+      setRetryable(!(e instanceof QueryError && (e.kind === "auth" || e.kind === "rate")));
       const message = controller.signal.aborted
         ? "查询已取消，保留当前结果。"
         : e instanceof Error
@@ -268,7 +290,7 @@ export default function Home() {
   });
   const delta = stats.delta;
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-query-state={busy ? "loading" : error ? "error" : data.isSample ? "sample" : "ready"}>
       <header className="topbar">
         <a className="brand" href="#overview">
           <span className="brand-icon">
@@ -383,7 +405,7 @@ export default function Home() {
           {busy ? (
             <div className="query-status">
               <LoaderCircle size={16} className="animate-spin" />
-              {status}
+              <span>{status}{slow && <small className="slow-query">服务响应较慢，可以继续等待或取消；已取得的数据会保留。</small>}</span>
               <Button
                 type="button"
                 size="sm"
@@ -396,7 +418,8 @@ export default function Home() {
           ) : error ? (
             <div className="query-error" role="alert">
               <AlertCircle size={17} />
-              <span>{error}</span>
+              <span>{error}{!receivedCurrent && <small>下方保留的是之前的{data.isSample ? "示例" : "结果"}，未作为本次查询更新。</small>}</span>
+              {retryable && lastQuery && <Button type="button" size="sm" variant="outline" onClick={() => void query({ ...lastQuery, refresh: true }).catch(() => {})}>重试</Button>}
             </div>
           ) : status ? (
             <div className="query-status">
@@ -413,6 +436,8 @@ export default function Home() {
             />
           </div>
         )}
+        {data.isSample && <p className="sample-notice"><Info size={17} /><span><strong>示例预览</strong> 下方是历史样本。查询成功后才会替换成你的战绩。</span></p>}
+        {busy && !receivedCurrent && !data.isSample && <p className="sample-notice">正在查询 {lastQuery?.player}；下方暂保留上次结果。</p>}
         <section className="profile">
           <div className="avatar">
             {data.player.slice(0, 1)}
@@ -442,7 +467,7 @@ export default function Home() {
           </div>
           <div className="snapshot">
             <span className="tiny-dot" />
-            {data.isSample ? "真实样本 · " : "查询于 "}
+            {data.isSample ? "示例采集于 " : data.loading ? "本次加载中 · " : "查询于 "}
             {stamp}
             <small>
               {data.mode === "mayhem"
@@ -480,16 +505,7 @@ export default function Home() {
             </Button>
           </div>
         )}
-        {data.mode === "mayhem" && (
-          <div className="mode-result-note">
-            <Swords size={17} />
-            <span>
-              当前统计仅包含海克斯大乱斗。
-              {data.rows.length ? "战报和复盘都使用下方这 " + data.rows.length + " 场样本。" : ""}
-            </span>
-          </div>
-        )}
-        {data.mode === "mayhem" && <MayhemReportPanel data={data} onSelect={setSelected} />}
+        {data.mode === "mayhem" && <MayhemReportPanel data={data} onSelect={setSelected} blocked={busy || Boolean(error)} />}
         {data.mode === "mayhem" && <CompanionsPanel data={data} onSelect={setSelected} />}
         <OptionalAnalysis collapsed={data.mode === "mayhem"}>
           <section className="stats-grid">
@@ -892,13 +908,14 @@ export default function Home() {
                 玩家画像按本次海斗出场英雄的官方定位生成，双定位平分权重，至少识别 5
                 场且覆盖八成样本才生成类型。海斗随机选人会影响画像，不代表操作水平。 趣味标签：至少
                 5 场且英雄全不重复为“英雄不重样”；否则某英雄至少出场 3 次为“熟面孔搭子”；否则至少 7
-                个英雄为“英雄体验家”。 至少 5 场、详情和指标齐全时，平均参团率 ≥ 70%
-                为“团战打卡人”，场均助攻 ≥ 20 为“助攻发射机”。本批海斗最近连续获胜至少 3
-                场为“连胜好心情”。按上述顺序最多显示 3 个标签。
-                英雄卡标签单独按该英雄在本次海斗中的表现计算：出场至少 3 次为“常驻嘉宾”；
-                详情完整且场均伤害至少 5 万为“火力全开”，场均助攻至少 20 为“助攻搭子”，
-                平均参团率至少 70% 为“团战常客”。按此顺序最多显示两个；未触发时用出场次数描述。
-                单场高光只比较本次样本，同值时选较近一场。
+                个英雄为“英雄体验家”。本批海斗最近连续获胜至少 3 场为“连胜好心情”，优先展示。
+                表现标签至少需要 5 场且详情与指标完整：平均参团率 ≥ 70% 或平均助攻 ≥ 20，
+                并且至少六成对局达到对应门槛。两项都满足时只保留相对门槛更突出的一项，
+                连同英雄使用标签最多展示 3 个。这不是全服稀有度或实力评级。
+                英雄卡始终展示官方定位；同一英雄少于 3 场时，只用“火力一刻”等词描述已取得的单场亮点。
+                至少 3 场后才按场均伤害 5 万、助攻 20、参团率 70% 的门槛生成表现标签，
+                同时要求六成对局达标，且详情完整。多个表现只选更突出的一项，出场至少 3 次可同时显示“常驻嘉宾”。
+
               </p>
               {data.warnings.map((w) => (
                 <p key={w} className="source-warning">

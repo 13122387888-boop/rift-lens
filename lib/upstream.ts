@@ -3,6 +3,7 @@ import champions from "./champions.json";
 import { AREAS, MODES, isMayhemMatch, type Query, type Match, type Snapshot } from "./model";
 import { TtlCache, queryKey } from "./cache";
 import type { QueryEvent } from "./query-stream";
+import { abortScope, throwIfAborted, QueryError } from "./request";
 const queryCache = new TtlCache<Snapshot>(80, 60_000);
 const detailCache = new TtlCache<Match>(500, 6 * 3600_000);
 const BASE = "https://a.lzyumi.top/lzyumi/lol/info";
@@ -112,10 +113,15 @@ export function normalizeMatch(m: Raw, detail: Raw, openId: string, name: string
 }
 export async function queryUpstream(
   q: Query,
-  signal: AbortSignal,
+  parentSignal: AbortSignal,
   emit?: (event: QueryEvent) => void,
 ): Promise<Snapshot> {
-  signal.throwIfAborted();
+  const session = abortScope(parentSignal);
+  try { return await runQuery(q, session.signal, session.abort, emit); }
+  finally { session.abort(); session.dispose(); }
+}
+async function runQuery(q: Query, signal: AbortSignal, stop: (reason: unknown) => void, emit?: (event: QueryEvent) => void): Promise<Snapshot> {
+  throwIfAborted(signal);
   const key = queryKey(q);
   if (q.refresh) queryCache.delete(key);
   const cached = !q.refresh && queryCache.get(key);
@@ -135,25 +141,31 @@ export async function queryUpstream(
     Object.entries({ ...params, ...signature() }).forEach(([k, v]) =>
       url.searchParams.set(k, String(v)),
     );
-    const response = await fetch(url, {
-      headers: { Accept: "application/json, text/plain, */*" },
-      redirect: "manual",
-      mode: "cors",
-      credentials: "omit",
-      signal: AbortSignal.any([signal, AbortSignal.timeout(18000)]),
-      cache: "no-store",
-    });
-    if (response.status === 401 || response.status === 403)
-      throw new Error("数据源要求登录或验证；请在原站正常完成后再查询。");
-    if (!response.ok) throw new Error("数据源暂时不可用（HTTP " + response.status + "）。");
-    let json: Raw;
+    throwIfAborted(signal);
+    const request = abortScope(signal, 18000);
     try {
-      json = obj(await response.json());
-    } catch {
-      throw new Error("数据源未返回有效战绩，请稍后重试。");
-    }
-    if (json.code !== 1) throw new Error("数据源未能完成查询，请检查 Riot ID、大区或稍后重试。");
-    return json;
+      const response = await fetch(url, {
+        headers: { Accept: "application/json, text/plain, */*" },
+        redirect: "manual", mode: "cors", credentials: "omit", signal: request.signal, cache: "no-store",
+      });
+      if (response.status === 401 || response.status === 403 || response.status === 429) {
+        const error = response.status === 429
+          ? new QueryError("查询暂时受限，请稍后再试。已停止本次请求。", "rate")
+          : new QueryError("数据源要求登录或验证，当前无法继续查询。", "auth");
+        stop(error);
+        throw error;
+      }
+      if (!response.ok) throw new QueryError("战绩服务暂时不可用，请稍后重试。", "service");
+      let json: Raw;
+      try { json = obj(await response.json()); }
+      catch { throwIfAborted(request.signal); throw new QueryError("暂未收到有效战绩，请稍后重试。", "data"); }
+      throwIfAborted(signal);
+      if (json.code !== 1) throw new QueryError("本次查询未完成，请核对完整 Riot ID 与大区，或稍后重试。", "data");
+      return json;
+    } catch (error) {
+      if (request.signal.aborted && !signal.aborted) throw new QueryError("战绩服务响应超时，请稍后重试。", "service");
+      throw error;
+    } finally { request.dispose(); }
   }
   // No dedicated mayhem filter is exposed by the source. Search only the
   // latest 30 all-mode rows, then select the observed 海斗 queue before details.
@@ -178,7 +190,7 @@ export async function queryUpstream(
   if (typeof b.openId !== "string" || !b.openId)
     throw new Error("数据源缺少玩家标识，请稍后重试。");
   const openId = b.openId;
-  const sourceMatches = arr(raw.data).slice(0, sourceCount);
+  const sourceMatches = [...new Map(arr(raw.data).slice(0, sourceCount).map((row) => [plain(row.gameId), row])).values()];
   const matches = (
     q.mode === "mayhem"
       ? sourceMatches.filter((m) => isMayhemMatch({ queue: queueName(m) }))
@@ -257,7 +269,7 @@ export async function queryUpstream(
   }
   async function worker() {
     while (next < matches.length) {
-      signal.throwIfAborted();
+      throwIfAborted(signal);
       const i = next++,
         m = matches[i],
         gameId = plain(m.gameId);
@@ -299,11 +311,12 @@ export async function queryUpstream(
           failed++;
         }
       }
+      throwIfAborted(signal);
       loaded++;
       emit?.({ type: "match", index: i, row: rows[i], loaded, detailHits });
     }
   }
-  await Promise.all([loadSummary(), worker(), worker()]);
+  await Promise.all([q.mode === "mayhem" || !rows.length ? Promise.resolve() : loadSummary(), worker(), worker()]);
   if (failed) warnings.push(failed + " 场详情暂不可用，缺失指标显示为 —。");
   if (q.mode === "mayhem" && rows.length && rows.every((r) => r.teamElo === null))
     warnings.push(

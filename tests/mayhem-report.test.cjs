@@ -18,13 +18,24 @@ const {playerPersona,championTags}=load('player-persona');
 const catalog=require('../lib/champion-roles.json').champions;
 const rowsFor=ids=>ids.map((championId,i)=>({...fixture.rows[i%fixture.rows.length],id:'role-'+i,championId,champion:catalog[championId]?.name??'未知英雄'}));
 const tagRows=[{...fixture.rows[0],championId:'24',assists:25,damage:60000,participation:80},{...fixture.rows[1],championId:'13',assists:1,damage:1000,participation:10}];
-assert.ok(championTags('24',tagRows).some(t=>t.label==='火力全开'));
-assert.ok(championTags('24',tagRows).some(t=>t.label==='助攻搭子'));
+assert.equal(championTags('24',tagRows).filter(t=>t.kind==='personal').length,1);
+assert.ok(championTags('24',tagRows).some(t=>t.label==='助攻一刻'));
+assert.ok(championTags('24',tagRows).find(t=>t.kind==='personal').evidence.includes('不代表长期表现'));
 assert.ok(!championTags('13',tagRows).some(t=>['火力全开','助攻搭子','团战常客'].includes(t.label)));
 assert.ok(championTags('13',tagRows).some(t=>t.label==='一局有缘'));
 assert.ok(championTags('24',tagRows.map(r=>({...r,detailState:'pending'}))).every(t=>!['火力全开','助攻搭子','团战常客'].includes(t.label)));
 assert.ok(championTags('24',tagRows.map(r=>({...r,mode:'ARAM',queue:'极地大乱斗'}))).every(t=>t.kind==='role'));
 assert.ok(championTags('24',tagRows.map(r=>({...r,damage:null,assists:null,participation:null}))).every(t=>!['火力全开','助攻搭子','团战常客'].includes(t.label)));
+
+const outlier=rowsFor(Array(5).fill('24')).map((r,i)=>({...r,assists:i===0?150:0,participation:10,damage:i===0?300000:0}));
+assert.ok(playerPersona(outlier).tags.every(t=>!['助攻发射机','团战打卡人'].includes(t.title)));
+assert.ok(championTags('24',outlier).every(t=>!['助攻搭子','火力全开'].includes(t.label)));
+const steady=rowsFor(Array(5).fill('24')).map(r=>({...r,assists:25,participation:80,damage:60000}));
+assert.equal(playerPersona(steady).tags.filter(t=>['助攻发射机','团战打卡人'].includes(t.title)).length,1);
+assert.ok(championTags('24',steady).some(t=>t.label==='助攻搭子'));
+assert.equal(playerPersona([steady[0],steady[0],steady[0],steady[0],steady[0]]).rows.length,1);
+assert.ok(!championTags('24',[steady[0],steady[0],steady[0]]).some(t=>t.label==='常驻嘉宾'));
+
 const fighter=playerPersona(rowsFor(Array(10).fill('24')));
 assert.equal(fighter.kind,'single');assert.equal(fighter.label,'战士型玩家');
 assert.equal(fighter.distribution.find(r=>r.key==='Fighter').percent,100);
@@ -68,7 +79,7 @@ function context(){
 }
 for(const style of ['overview','highlight']){
   const ctx=context();drawReport(ctx,{data:fixture,report,style,hideName:true,highlight:report.damageMatch,highlightLabel:'本次样本 · 单场伤害最高'});
-  const drawn=ctx.calls.join('\n');assert.equal(/lzyumi/i.test(drawn),false);assert.ok(drawn.includes('神秘海斗玩家'));assert.equal(drawn.includes(fixture.player.split('#')[0]),false);assert.ok(drawn.includes('非段位 / 全服排名'));assert.ok(drawn.includes('真实样本'));
+  const drawn=ctx.calls.join('\n');assert.equal(/lzyumi/i.test(drawn),false);assert.ok(drawn.includes('神秘海斗玩家'));assert.equal(drawn.includes(fixture.player.split('#')[0]),false);assert.ok(drawn.includes('非段位 / 全服排名'));assert.ok(drawn.includes('示例'));
   if(style==='overview'){assert.ok(drawn.includes('常选的英雄'));for(const hero of report.persona.heroes)for(const tag of hero.tags)assert.ok(drawn.includes(tag.label));for(const tag of report.persona.tags)assert.ok(drawn.includes(tag.title));assert.ok(drawn.includes(report.persona.title));assert.ok(drawn.includes(report.persona.label));assert.equal(drawn.includes('每分钟伤害'),false);assert.equal(drawn.includes('整体 KDA'),false);}
 }
 console.log('PASS: official champion tags, dual-role splitting, percentages sum to 100, mixed/insufficient/unknown coverage, mode isolation, missing-detail badge gates, streak boundaries and persona PNG text.');

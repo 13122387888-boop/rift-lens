@@ -60,11 +60,11 @@ export function drawReport(
   text("对局透镜 / 海斗档案", 72, 49, 26, "#adc0d4", 500);
   text(
     data.isSample
-      ? "真实样本 · " + data.fetchedAt.slice(0, 10)
+      ? "示例 · " + data.fetchedAt.slice(0, 10)
       : "个人战报 · " + data.fetchedAt.slice(0, 10),
     665,
     49,
-    23,
+    29,
     "#adc0d4",
     400,
     345,
@@ -127,7 +127,7 @@ export function drawReport(
         label: "次击杀",
       },
       { v: String(highlight.assists ?? "—"), label: "次助攻" },
-      { v: fmt(highlight.participation) + "%", label: "参团率" },
+      { v: highlight.participation == null ? "—" : fmt(highlight.participation) + "%", label: "参团率" },
     ];
     values.forEach((m, i) => {
       const x = 72 + i * 312;
@@ -142,98 +142,61 @@ export function drawReport(
     text("本人本次样本的单场纪录，非全服或历史最高。", 98, 1103, 24, "#9ab5c1");
   } else {
     const persona = report.persona;
-    text("MY MAYHEM PLAYER CARD", 72, 230, 24, persona.color, 600);
-    text(persona.title, 68, 270, 86, "#fff0cd", 700);
-    text(persona.label, 72, 377, 36, persona.color, 600);
-    text(persona.quote, 72, 429, 29, "#bed0dc");
-    panel(72, 491, 936, 252);
-    text("我的英雄口味", 98, 510, 28, "#f4e6c8", 600);
-    text(
-      "定位已识别 " + persona.classified + "/" + persona.rows.length + " 场",
-      684,
-      517,
-      23,
-      "#97b4c8",
-      400,
-      298,
-    );
-    persona.distribution.forEach((role, i) => {
-      const x = 98 + (i % 2) * 460,
-        y = 560 + Math.floor(i / 2) * 58;
-      text(role.label, x, y, 29, role.color, 600, 90);
-      ctx.fillStyle = "#3b4b5d";
-      ctx.fillRect(x + 86, y + 11, 236, 11);
-      ctx.fillStyle = role.color;
-      ctx.fillRect(x + 86, y + 11, (236 * role.share) / 100, 11);
-      text(persona.classified ? role.percent + "%" : "—", x + 343, y, 28, "#e9eef2", 500, 85);
-    });
-    text("常选的英雄", 72, 765, 27, "#a7c0d0", 500);
-    text("本次出场最多", 799, 765, 23, "#97b4c8", 400, 209);
-    persona.heroes.forEach((hero, i) => {
+    text(persona.title, 68, 229, 80, "#fff0cd", 700);
+    text(persona.label, 72, 327, 36, persona.color, 600);
+    const badges = persona.tags.slice(0, 3);
+    badges.forEach((badge, i) => {
       const x = 72 + i * 318;
-      panel(x, 808, 300, 175);
+      panel(x, 389, 300, 53);
+      text(badge.title, x + 18, 398, 32, "#f0d496", 600, 264);
+    });
+    if (!badges.length) text("这批对局，也有自己的故事。", 72, 400, 30, "#adc4cf");
+    panel(72, 466, 936, 239);
+    text("我的英雄口味", 96, 486, 29, "#f4e6c8", 600);
+    persona.distribution.forEach((role, i) => {
+      const x = 98 + (i % 2) * 460, y = 538 + Math.floor(i / 2) * 51;
+      text(role.label, x, y, 30, role.color, 600, 90);
+      ctx.fillStyle = "#3b4b5d";
+      ctx.fillRect(x + 86, y + 11, 236, 12);
+      ctx.fillStyle = role.color;
+      ctx.fillRect(x + 86, y + 11, (236 * role.share) / 100, 12);
+      text(persona.classified ? role.percent + "%" : "—", x + 343, y, 30, "#e9eef2", 500, 85);
+    });
+    text("常选的英雄", 72, 731, 31, "#d7e2e5", 600);
+    text("本次出场最多", 780, 735, 26, "#97b4c8", 400, 228);
+    persona.heroes.forEach((hero, i) => {
+      const y = 783 + i * 114;
+      panel(72, y, 936, 105);
       const avatar = heroPortraits[hero.id];
-      if (avatar) ctx.drawImage(avatar, x + 16, 824, 80, 80);
+      if (avatar) ctx.drawImage(avatar, 83, y + 8, 89, 89);
       else {
         ctx.fillStyle = "#324e59";
-        ctx.fillRect(x + 16, 824, 80, 80);
-        text(hero.name.slice(0, 1), x + 37, 843, 38, "#e4c78e", 600, 62);
+        ctx.fillRect(83, y + 8, 89, 89);
+        text(hero.name.slice(0, 1), 105, y + 28, 40, "#e4c78e", 600, 64);
       }
-      text(hero.name, x + 110, 826, 27, "#f2e4c9", 600, 176);
-      text(hero.count + " 场", x + 110, 869, 23, "#a6bcca", 400, 176);
+      text(hero.name, 196, y + 12, 37, "#f2e4c9", 600, 350);
+      text("本次 " + hero.count + " 场", 196, y + 63, 28, "#a6bcca", 400, 340);
       [hero.tags.filter(t => t.kind === "role"), hero.tags.filter(t => t.kind === "personal")].forEach((tags, row) => {
-        let offset = 16;
+        let offset = 588;
         tags.forEach(tag => {
-          ctx.font = '500 21px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif';
-          const width = ctx.measureText(tag.label).width + 16;
+          ctx.font = '500 27px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif';
+          const width = ctx.measureText(tag.label).width + 20;
           ctx.fillStyle = row === 0 ? "#2d4552" : "#423d2d";
-          ctx.fillRect(x + offset, 915 + row * 31, width, 26);
-          text(tag.label, x + offset + 8, 917 + row * 31, 21, tag.color, 500, width - 12);
-          offset += width + 8;
+          ctx.fillRect(offset, y + 10 + row * 45, width, 36);
+          text(tag.label, offset + 10, y + 13 + row * 45, 27, tag.color, 500, width - 16);
+          offset += width + 10;
         });
       });
     });
-    if (!persona.heroes.length) text("查一查战绩，收集你的英雄故事。", 72, 877, 30, "#adc4cf");
-    const badges = persona.tags.slice(0, 3);
-    if (badges.length) {
-      badges.forEach((badge, i) => {
-        const x = 72 + i * 318;
-        panel(x, 990, 300, 115);
-        text(badge.title, x + 16, 1004, 31, "#e9ce93", 600, 270);
-        ctx.font = '400 21px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif';
-        const lines: string[] = [];
-        let line = "";
-        for (const ch of badge.evidence) {
-          if (line && ctx.measureText(line + ch).width > 268) {
-            lines.push(line);
-            line = "";
-          }
-          line += ch;
-        }
-        if (line) lines.push(line);
-        lines
-          .slice(0, 2)
-          .forEach((value, j) => text(value, x + 16, 1048 + j * 25, 21, "#a2b7c7", 400, 268));
-      });
-    } else {
-      text(persona.evidence, 72, 1008, 28, "#b8c9d4");
-      text("快乐不需要达标，每场都有自己的故事。", 72, 1055, 26, "#e9ce93");
-    }
-    const wins =
-      report.stats.wins +
-      " 胜 · " +
-      report.stats.losses +
-      " 负" +
-      (report.stats.unknown ? " · " + report.stats.unknown + " 场未判定" : "");
-    text("这 " + report.rows.length + " 场的回忆  /  " + wins, 72, 1121, 29, "#c4dfd6", 500);
+    if (!persona.heroes.length) text("查一查战绩，收集你的英雄故事。", 72, 830, 31, "#adc4cf");
+    text(report.rows.length + " 场海斗  ·  " + report.stats.wins + " 胜 " + report.stats.losses + " 负" + (report.stats.unknown ? " · " + report.stats.unknown + " 场未判定" : ""), 72, 1140, 30, "#c4dfd6", 500);
   }
   line(1181);
   text("RIFT LENS", 72, 1208, 31, "#bfdcd9", 600);
-  text("趣味战报 · 仅描述本人样本，非段位 / 全服排名", 340, 1212, 23, "#91aeba", 400, 672);
-  text(report.coverage, 72, 1260, 23, "#849fae");
-  text("公开战绩数据 · 缺失值为 —", 630, 1260, 23, "#849fae", 400, 380);
+  text("近期画像 · 非段位 / 全服排名", 470, 1212, 27, "#91aeba", 400, 672);
+  text("最近 " + (data.scanned ?? data.requested) + " 场中 · " + report.rows.length + " 场海斗", 72, 1260, 27, "#a2bbc5");
   if (style === "overview")
-    text("按本次出场英雄生成 · 随机选人影响画像 · 不代表操作水平", 72, 1301, 21, "#849fae");
+    text("随机选人也会影响画像 · 仅描述这批对局", 72, 1301, 24, "#849fae");
 }
 
 export async function makeReportPng(options: CardOptions): Promise<Blob> {

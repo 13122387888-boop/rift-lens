@@ -10,7 +10,7 @@ function loadTs(file,dependencies={}){
 }
 const model=loadTs("lib/model.ts"),analysis=loadTs("lib/analysis.ts");
 const cache=loadTs("lib/cache.ts");
-const upstream=loadTs("lib/upstream.ts",{"./cache":cache,"./model":model,"./champions.json":require("../lib/champions.json")});
+const upstream=loadTs("lib/upstream.ts",{"./request":loadTs("lib/request.ts"),"./cache":cache,"./model":model,"./champions.json":require("../lib/champions.json")});
 const sample=require("../lib/seed.json");
 const result=analysis.analyze(sample.rows);
 assert.equal(result.wins,10);assert.equal(result.losses,1);

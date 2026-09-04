@@ -3259,3 +3259,48 @@ footer > span:last-child {
     display: none;
   }
 }
+
+.sample-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  color: #e0c786;
+  background: #342f22;
+  border: 1px solid #655534;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.sample-notice svg { flex-shrink: 0; margin-top: 3px; }
+.sample-notice strong { font-weight: 600; margin-right: 7px; }
+.query-error, .query-status { flex-wrap: wrap; }
+.query-error > span, .query-status > span { flex: 1; min-width: 120px; overflow-wrap: anywhere; }
+.query-error small, .slow-query { display: block; margin-top: 5px; font-size: 13px; line-height: 1.7; }
+.query-error small { color: #d0b8bd; }
+.slow-query { color: #b0c4d0; }
+[data-query-state="loading"] .report-preview { opacity: 0.72; }
+button, [role="tab"] { touch-action: manipulation; }
+.report-preview .report-feedback { display: block; min-height: 1.7em; }
+@media (max-width: 760px) {
+  .page-heading .eyebrow, .mayhem-edition { display: none; }
+  .page-heading { margin-bottom: 12px; }
+  .profile { padding-block: 14px; }
+  .profile h2 { font-size: 19px; }
+  .mayhem-studio { margin-top: 12px; }
+  .mayhem-intro { margin-bottom: 10px; }
+  .mayhem-intro h2 { font-size: 21px; margin: 0; }
+  .mayhem-studio-grid { gap: 12px; }
+  .mayhem-story { padding-top: 0; }
+  .persona-more { margin-top: 0; }
+  .query-status, .query-error { font-size: 14px; line-height: 1.7; }
+  .query-status button, .query-error button { min-height: 44px; }
+  .report-preview .report-feedback { font-size: 13px; }
+  .report-actions { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+
+.empty-report { padding: 34px 20px; margin: 20px 0; text-align: center; border: 1px solid #304653; border-radius: 12px; background: #152630; }
+.empty-report > svg { margin: auto; color: #acd2c9; }
+.empty-report h2 { font-size: 20px; margin: 14px 0; }
+.empty-report p { color: #aac0cc; font-size: 14px; line-height: 1.8; }

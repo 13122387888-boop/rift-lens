@@ -31,12 +31,30 @@ async function main(){
  };
  try{
   const updates=[];const first=await fetchQuery(q,new AbortController().signal,r=>updates.push(r));
-  assert.equal(updates[0].loading,true);assert.equal(updates[0].rows[0].detailState,'pending');assert.equal(updates.at(-1).loading,false);assert.equal(first.rows[0].participation,73);assert.equal(first.rows[0].teamElo,null);assert.equal(requests[0].searchParams.get('allCount'),'30');assert.equal(requests.length,4);
-  const second=await fetchQuery(q,new AbortController().signal,()=>{});assert.equal(second.cache.queryHit,true);assert.equal(requests.length,4);
-  await fetchQuery({...q,refresh:true},new AbortController().signal,()=>{});assert.equal(requests.length,8);
-  failMain=true;await assert.rejects(()=>fetchQuery({...q,refresh:true},new AbortController().signal,()=>{}),/登录或验证/);assert.equal(requests.length,9);
+  assert.equal(updates[0].loading,true);assert.equal(updates[0].rows[0].detailState,'pending');assert.equal(updates.at(-1).loading,false);assert.equal(first.rows[0].participation,73);assert.equal(first.rows[0].teamElo,null);assert.equal(requests[0].searchParams.get('allCount'),'30');assert.equal(requests.length,3);
+  const second=await fetchQuery(q,new AbortController().signal,()=>{});assert.equal(second.cache.queryHit,true);assert.equal(requests.length,3);
+  await fetchQuery({...q,refresh:true},new AbortController().signal,()=>{});assert.equal(requests.length,6);
+  failMain=true;await assert.rejects(()=>fetchQuery({...q,refresh:true},new AbortController().signal,()=>{}),/登录或验证/);assert.equal(requests.length,7);
   failMain=false;pendingDetails=true;const controller=new AbortController(),partial=[];const pending=fetchQuery({...q,refresh:true},controller.signal,r=>partial.push(r));await new Promise(setImmediate);controller.abort();await assert.rejects(()=>pending);assert.equal(partial.at(-1).loading,false);assert.equal(partial.at(-1).rows.every(r=>r.detailState==='unavailable'),true);
-  global.fetch=async()=>{throw new TypeError('Failed to fetch');};await assert.rejects(()=>fetchQuery({...q,refresh:true},new AbortController().signal,()=>{}),/跨域策略/);
+  global.fetch=async()=>{throw new TypeError('Failed to fetch');};await assert.rejects(()=>fetchQuery({...q,refresh:true},new AbortController().signal,()=>{}),/连接数据源/);
+
+  const many={...list,data:Array.from({length:6},(_,i)=>({...list.data[0],gameId:'stop-'+i}))};
+  for(const status of [403,429]){
+   let hits=0;const updates=[];
+   global.fetch=async(url)=>{hits++;return new URL(url).pathname.endsWith('/findOrderDetailInfoAll')?Response.json({},{status}):Response.json(many);};
+   await assert.rejects(()=>fetchQuery({...q,refresh:true},new AbortController().signal,r=>updates.push(r)),status===403?/验证/:/受限/);
+   assert.ok(hits<=3,'Continued requests after authorization/rate failure');
+   assert.equal(updates.at(-1).loading,false);assert.ok(updates.at(-1).rows.every(r=>r.detailState!=='pending'));
+  }
+  let emptyCalls=0;
+  global.fetch=async()=>{emptyCalls++;return Response.json({...list,data:[]});};
+  const empty=await fetchQuery({...q,refresh:true},new AbortController().signal,()=>{});assert.equal(empty.rows.length,0);assert.equal(empty.loading,false);assert.equal(emptyCalls,1);
+  global.fetch=async url=>new URL(url).pathname.endsWith('/findOrderDetailInfoAll')?(new URL(url).searchParams.get('gameId')==='test1'?Response.json({},{status:500}):Response.json(detail)):Response.json(list);
+  const incomplete=await fetchQuery({...q,refresh:true},new AbortController().signal,()=>{});assert.equal(incomplete.rows.filter(r=>r.detailState==='unavailable').length,1);assert.equal(incomplete.cache.reusable,false);
+  let duplicateCalls=0;global.fetch=async url=>{duplicateCalls++;return Response.json(new URL(url).pathname.endsWith('/findOrderDetailInfoAll')?detail:{...list,data:[list.data[0],list.data[0]]});};
+  const deduped=await fetchQuery({...q,refresh:true},new AbortController().signal,()=>{});assert.equal(deduped.rows.length,1);assert.equal(duplicateCalls,2);
+  const {abortScope}=load('lib/request.ts');const timeout=abortScope(new AbortController().signal,2);await new Promise(r=>setTimeout(r,8));assert.equal(timeout.signal.aborted,true);assert.equal(timeout.signal.reason.name,'TimeoutError');timeout.dispose();
+  const clean=abortScope(new AbortController().signal,2);clean.dispose();await new Promise(r=>setTimeout(r,8));assert.equal(clean.signal.aborted,false);
   console.log('PASS: browser-only MD5, public GET transport with omitted credentials, early list and progressive details, cache/refresh, authentication refusal without retries, abort recovery and CORS/network errors.');
  }finally{global.fetch=original;}
  if(process.argv.includes('--live')){
