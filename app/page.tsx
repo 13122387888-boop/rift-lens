@@ -439,16 +439,14 @@ export default function Home() {
         {data.isSample && <p className="sample-notice"><Info size={17} /><span><strong>示例预览</strong> 下方是历史样本。查询成功后才会替换成你的战绩。</span></p>}
         {busy && !receivedCurrent && !data.isSample && <p className="sample-notice">正在查询 {lastQuery?.player}；下方暂保留上次结果。</p>}
         <section className="profile">
-          <div className="avatar">
-            {data.player.slice(0, 1)}
-            <span>LV. {fmt(data.level)}</span>
-          </div>
+          <div className="avatar" aria-hidden="true">{data.player.slice(0, 1)}</div>
           <div className="profile-main">
             <h2>
               {data.player.split("#")[0]}
-              <small>#{data.player.split("#")[1]}</small>
+              {data.player.includes("#") && <small>#{data.player.split("#").slice(1).join("#")}</small>}
             </h2>
             <p>
+              <span className="profile-level">LV. {fmt(data.level)}</span>
               {data.area}
               <span>·</span>
               {MODES[data.mode].label}

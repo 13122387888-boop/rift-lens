@@ -28,7 +28,7 @@ function PosterPlaceholder({
         <span>{data.isSample ? "示例预览" : "个人战报"}</span>
       </div>
       <p className="poster-player">
-        {hideName ? "神秘海斗玩家" : data.player.split("#")[0]}
+        {hideName ? "神秘海斗玩家" : data.player}
         <small>
           {data.area} · 最近 {report.rows.length} 场海斗
         </small>

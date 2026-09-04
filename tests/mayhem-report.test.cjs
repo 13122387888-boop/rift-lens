@@ -79,7 +79,9 @@ function context(){
 }
 for(const style of ['overview','highlight']){
   const ctx=context();drawReport(ctx,{data:fixture,report,style,hideName:true,highlight:report.damageMatch,highlightLabel:'本次样本 · 单场伤害最高'});
-  const drawn=ctx.calls.join('\n');assert.equal(/lzyumi/i.test(drawn),false);assert.ok(drawn.includes('神秘海斗玩家'));assert.equal(drawn.includes(fixture.player.split('#')[0]),false);assert.ok(drawn.includes('非段位 / 全服排名'));assert.ok(drawn.includes('示例'));
+  const drawn=ctx.calls.join('\n');assert.equal(/lzyumi/i.test(drawn),false);assert.ok(drawn.includes('神秘海斗玩家'));assert.equal(drawn.includes(fixture.player.split('#')[0]),false);assert.equal(drawn.includes('#'+fixture.player.split('#')[1]),false);assert.ok(drawn.includes('非段位 / 全服排名'));assert.ok(drawn.includes('示例'));
+  const publicCtx=context();drawReport(publicCtx,{data:fixture,report,style,hideName:false,highlight:report.damageMatch,highlightLabel:'本次样本 · 单场伤害最高'});
+  assert.ok(publicCtx.calls.includes(fixture.player),'Both exported card styles must show the full Riot ID');
   if(style==='overview'){assert.ok(drawn.includes('常选的英雄'));for(const hero of report.persona.heroes)for(const tag of hero.tags)assert.ok(drawn.includes(tag.label));for(const tag of report.persona.tags)assert.ok(drawn.includes(tag.title));assert.ok(drawn.includes(report.persona.title));assert.ok(drawn.includes(report.persona.label));assert.equal(drawn.includes('每分钟伤害'),false);assert.equal(drawn.includes('整体 KDA'),false);}
 }
 console.log('PASS: official champion tags, dual-role splitting, percentages sum to 100, mixed/insufficient/unknown coverage, mode isolation, missing-detail badge gates, streak boundaries and persona PNG text.');

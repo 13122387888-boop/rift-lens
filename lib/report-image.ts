@@ -56,7 +56,7 @@ export function drawReport(
     ctx.fillStyle = "#203341";
     ctx.fillRect(x, y, w, h);
   };
-  const name = hideName ? "神秘海斗玩家" : data.player.split("#")[0];
+  const name = hideName ? "神秘海斗玩家" : data.player;
   text("对局透镜 / 海斗档案", 72, 49, 26, "#adc0d4", 500);
   text(
     data.isSample
@@ -69,8 +69,11 @@ export function drawReport(
     400,
     345,
   );
-  text(name, 72, 115, 40, "#fff", 600);
-  text(data.area + " · " + report.dateRange, 72, 170, 25, "#a4b9ce");
+  // Fit the complete Riot ID, including its tag, inside the shared image header.
+  ctx.font = '750 60px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif';
+  const nameSize = Math.min(60, Math.floor(60 * 936 / Math.max(1, ctx.measureText(name).width)));
+  text(name, 72, 108, nameSize, "#fff", 750);
+  text(data.area + " · " + report.dateRange, 72, 185, 25, "#a4b9ce");
   if (style === "highlight" && highlight) {
     text("MY MAYHEM HIGHLIGHT", 72, 238, 24, "#ecc273", 500);
     text(
