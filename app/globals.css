@@ -2686,3 +2686,466 @@ footer > span:last-child {
 .source-disclosure[open] > summary > svg {
   transform: rotate(90deg);
 }
+
+.report-preview {
+  scroll-margin-top: 18px;
+}
+.report-preview .report-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+.report-preview .report-actions button {
+  min-height: 46px;
+  padding-inline: 10px;
+}
+.report-preview .report-feedback {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #a9bfcc;
+  margin-top: 9px;
+}
+.persona-more {
+  margin: 18px 0 24px;
+  border: 1px solid #354a57;
+  border-radius: 9px;
+  padding: 13px;
+}
+.persona-more > summary {
+  cursor: pointer;
+  color: #c6d4da;
+  font-size: 14px;
+}
+.poster-tag-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+.poster-tag-preview > span {
+  border: 1px solid #8a7043;
+  border-radius: 6px;
+  color: #eed095;
+  padding: 6px 9px;
+  font-size: 13px;
+}
+.companions-panel {
+  margin: 32px 0;
+  border: 1px solid #344953;
+  border-radius: 14px;
+  padding: 26px;
+  background: linear-gradient(130deg, #192d34, #162330);
+}
+.companions-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.companions-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 26px;
+  font-weight: 600;
+  margin: 5px 0 9px;
+}
+.companions-heading h2 svg {
+  color: #b1dbc5;
+}
+.companions-heading p:not(.eyebrow) {
+  font-size: 14px;
+  color: #a4b9c7;
+  margin: 0;
+  line-height: 1.7;
+}
+.companions-privacy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #b5c8d3;
+  min-height: 40px;
+}
+.companion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.companion-card {
+  min-width: 0;
+  background: #12232c;
+  border: 1px solid #39515b;
+  border-radius: 10px;
+}
+.companion-card > summary {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 16px;
+  gap: 12px;
+  padding: 16px;
+  align-items: center;
+  cursor: pointer;
+}
+.companion-card > summary::-webkit-details-marker {
+  display: none;
+}
+.companion-avatar img,
+.companion-avatar .champion-placeholder {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+.companion-name strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: #e1ebe4;
+  overflow-wrap: anywhere;
+}
+.companion-name small {
+  display: block;
+  margin-top: 5px;
+  color: #94b2c0;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.companion-record {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  border-top: 1px solid #314b54;
+  padding-top: 12px;
+}
+.companion-record b {
+  font-size: 16px;
+  color: #e8d2a0;
+  font-weight: 500;
+}
+.companion-record > span {
+  font-size: 12px;
+  color: #b9cbd4;
+}
+.companion-open-hint {
+  grid-column: 1 / -1;
+  color: #8daeba;
+  font-size: 11px;
+}
+.companion-card[open] > summary > svg {
+  transform: rotate(180deg);
+}
+.companion-games {
+  padding: 0 14px 12px;
+}
+.companion-games button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #2e4550;
+  padding: 12px 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  min-height: 48px;
+}
+.companion-games button > span {
+  flex: 1;
+  font-size: 12px;
+  color: #c5d2d8;
+}
+.companion-games small {
+  display: block;
+  color: #8ca8b7;
+  margin-top: 4px;
+}
+.companion-games b {
+  font-size: 12px;
+  color: #ceadb8;
+  font-weight: 400;
+}
+.companions-note {
+  margin: 17px 0 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #8fabba;
+}
+.companions-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 27px 16px;
+  gap: 12px;
+  background: #16232e;
+  border-radius: 9px;
+}
+.companions-empty > svg {
+  color: #93bcb8;
+}
+.companions-empty strong {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.7;
+}
+.companions-empty p {
+  color: #95afc0;
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 0;
+}
+@media (max-width: 1050px) {
+  .companion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .topbar {
+    height: 64px;
+    padding: 0 16px;
+    gap: 12px;
+    justify-content: space-between;
+  }
+  .topbar nav {
+    gap: 12px;
+    margin-left: auto;
+  }
+  .brand {
+    gap: 8px;
+  }
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .brand small {
+    font-size: 10px;
+  }
+  .workspace {
+    padding: 18px 12px 0;
+  }
+  .page-heading {
+    margin-bottom: 16px;
+  }
+  .page-heading .eyebrow {
+    font-size: 10px;
+  }
+  .page-heading h1 {
+    font-size: 24px;
+  }
+  .querybar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 14px;
+    gap: 12px 10px;
+  }
+  .querybar > label {
+    min-width: 0;
+    font-size: 11px;
+  }
+  .querybar [data-slot="select-trigger"] {
+    min-height: 46px;
+    min-width: 0;
+    width: 100%;
+    padding-inline: 9px;
+    font-size: 13px;
+  }
+  .querybar [data-slot="select-value"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .querybar .query-button {
+    min-height: 46px;
+    height: 46px;
+    margin: 0;
+    align-self: end;
+    font-size: 14px;
+  }
+  .querybar input {
+    font-size: 16px;
+    min-height: 46px;
+  }
+  .mode-hint {
+    font-size: 11px;
+    line-height: 1.7;
+    margin-block: 10px;
+  }
+  .profile {
+    padding: 18px 2px;
+    gap: 10px;
+  }
+  .profile-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .profile h2 {
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+    font-size: 18px;
+  }
+  .profile h2 small {
+    display: inline-block;
+    font-size: 12px;
+  }
+  .profile .avatar {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+  .snapshot {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .snapshot small {
+    display: block;
+    margin: 0;
+    font-size: 11px;
+  }
+  .mode-result-note,
+  .cache-status {
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .mayhem-studio {
+    margin-top: 20px;
+  }
+  .mayhem-intro {
+    margin-bottom: 14px;
+  }
+  .mayhem-intro h2 {
+    font-size: 24px;
+  }
+  .mayhem-intro p:not(.eyebrow) {
+    font-size: 13px;
+  }
+  .report-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .report-toolbar [data-slot="tabs-list"] {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+  }
+  .report-toolbar [data-slot="tabs-trigger"] {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    font-size: 14px;
+    padding-inline: 8px;
+  }
+  .report-privacy {
+    justify-self: end;
+    min-height: 36px;
+    font-size: 12px;
+  }
+  .report-png {
+    border-radius: 10px;
+  }
+  .report-preview {
+    max-width: 100%;
+  }
+  .report-preview > p {
+    font-size: 11px;
+    margin: 9px 0;
+  }
+  .report-preview .report-actions button {
+    height: 48px;
+    font-size: 14px;
+  }
+  .mayhem-studio-grid {
+    gap: 24px;
+  }
+  .mayhem-story h3 {
+    font-size: 22px;
+  }
+  .mayhem-story > p:not(.eyebrow) {
+    font-size: 14px;
+    line-height: 1.8;
+    margin-bottom: 14px;
+  }
+  .mayhem-moment[data-slot="button"] {
+    padding: 14px 11px;
+    min-height: 88px;
+    gap: 10px;
+  }
+  .mayhem-moment > strong {
+    font-size: 22px;
+  }
+  .moments-heading {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .companions-panel {
+    margin: 24px 0;
+    padding: 18px 14px;
+  }
+  .companions-heading {
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .companions-heading h2 {
+    font-size: 23px;
+  }
+  .companions-heading .eyebrow {
+    font-size: 10px;
+  }
+  .companions-privacy {
+    margin-left: auto;
+    min-height: 32px;
+  }
+  .companion-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 11px;
+  }
+  .companion-card > summary {
+    padding: 14px;
+  }
+  .companion-games button {
+    min-height: 52px;
+  }
+  .match-sheet {
+    width: min(100vw, 520px);
+    max-width: 100vw;
+  }
+}
+@media (max-width: 360px) {
+  .topbar {
+    padding-inline: 12px;
+  }
+  .topbar nav a {
+    font-size: 12px;
+  }
+  .brand {
+    font-size: 16px;
+  }
+  .brand-icon {
+    display: none;
+  }
+  .workspace {
+    padding-inline: 10px;
+  }
+  .querybar {
+    padding: 12px;
+  }
+  .querybar [data-slot="select-trigger"] {
+    font-size: 12px;
+  }
+  .mayhem-intro h2 {
+    font-size: 22px;
+  }
+  .mayhem-moment > strong {
+    font-size: 20px;
+  }
+}

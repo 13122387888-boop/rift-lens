@@ -38,7 +38,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:31.009Z"
+      "detailsFetchedAt": "2026-09-03T14:23:31.009Z",
+      "teammates": [
+        {
+          "id": "da606794b7414d8705e0ffda6acba802",
+          "name": "坤坤凡凡我们一起#37481",
+          "championId": "800"
+        },
+        {
+          "id": "8567ef062eea19bcf000f863ea0a5747",
+          "name": "温岭第一豹女#28191",
+          "championId": "157"
+        },
+        {
+          "id": "44b81a796d5c1ecf0be178c4388b8144",
+          "name": "EZ这基佬#27003",
+          "championId": "145"
+        },
+        {
+          "id": "144b1683df0bb4c4ab3dd9a3e8fa4929",
+          "name": "醋溜香脆便当#63525",
+          "championId": "75"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "iqR0cHJmOH0Op+ALJwzZmg==",
@@ -62,7 +85,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:31.149Z"
+      "detailsFetchedAt": "2026-09-03T14:23:31.149Z",
+      "teammates": [
+        {
+          "id": "4ba49e435ea7d88f186de8af4e97dbbb",
+          "name": "峡谷一日游yy#46271",
+          "championId": "10"
+        },
+        {
+          "id": "c7dce79e0cb19d4f25c4edcba8c03015",
+          "name": "圣域丨想#46652",
+          "championId": "82"
+        },
+        {
+          "id": "cd98c2d572155a90afe350c2ea6e7c86",
+          "name": "我试着描绘你#20360",
+          "championId": "27"
+        },
+        {
+          "id": "3290034d0050e8606f6714f64ccfdf33",
+          "name": "我真的是大坑#77693",
+          "championId": "107"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "X+Uzluq/BLqUPr9fqBigYQ==",
@@ -86,7 +132,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:31.767Z"
+      "detailsFetchedAt": "2026-09-03T14:23:31.767Z",
+      "teammates": [
+        {
+          "id": "575e4a1649341ac1ff7a25cc6b71dda1",
+          "name": "精致的辉#53763",
+          "championId": "105"
+        },
+        {
+          "id": "1fe2ae5de33b90d5be5085f33d325d81",
+          "name": "Haise#60472",
+          "championId": "30"
+        },
+        {
+          "id": "55c5130a2dc9fff4f9b1316d7f3ad066",
+          "name": "stubborn#37344",
+          "championId": "875"
+        },
+        {
+          "id": "3290034d0050e8606f6714f64ccfdf33",
+          "name": "我真的是大坑#77693",
+          "championId": "222"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "QCwp0BLazE9LXR+oBDn4iA==",
@@ -110,7 +179,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:31.626Z"
+      "detailsFetchedAt": "2026-09-03T14:23:31.626Z",
+      "teammates": [
+        {
+          "id": "5e67404deb1a80c38909f25b1bb84b41",
+          "name": "hideontr#12103",
+          "championId": "136"
+        },
+        {
+          "id": "4ca08610828c5af90dbf4bb1a08a7819",
+          "name": "疯骚坟墓#69080",
+          "championId": "80"
+        },
+        {
+          "id": "0fd81ea15968b01ad1a623beef7c2293",
+          "name": "我牛英建爱寡富#36911",
+          "championId": "19"
+        },
+        {
+          "id": "bfbe05a16f5dbd926eb3859c9dfed2bc",
+          "name": "啵弄子#49242",
+          "championId": "115"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "8Kq2vya9SdJx7FfKbIC2lg==",
@@ -134,7 +226,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:32.143Z"
+      "detailsFetchedAt": "2026-09-03T14:23:32.143Z",
+      "teammates": [
+        {
+          "id": "6d046c8404207573b64f4f8e8d363758",
+          "name": "热血忘却了吗#80314",
+          "championId": "76"
+        },
+        {
+          "id": "ec9aa37b085b2ceff6f3d37d5492f8c5",
+          "name": "不走位的皮小羊丶#22077",
+          "championId": "51"
+        },
+        {
+          "id": "6de82766ae7ff528ddee1f2202f50fe4",
+          "name": "开黑吗我法鸡贼溜#14418",
+          "championId": "120"
+        },
+        {
+          "id": "40153fcbe8cf21707d014d7ad8c388a2",
+          "name": "michael在这里#50131",
+          "championId": "42"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "ayocXnLNMXbkwJke5hJtNw==",
@@ -158,7 +273,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:32.491Z"
+      "detailsFetchedAt": "2026-09-03T14:23:32.491Z",
+      "teammates": [
+        {
+          "id": "5020cf6c4477611ad59dc65902f1320c",
+          "name": "软甜奶桃味#67623",
+          "championId": "54"
+        },
+        {
+          "id": "f26ac7c3059fda389b09d051d65e7378",
+          "name": "Alex2505#48099",
+          "championId": "51"
+        },
+        {
+          "id": "8f9b990a1b3d289877185ea9114c8270",
+          "name": "迷你人的小妖精#45991",
+          "championId": "267"
+        },
+        {
+          "id": "a67237c5b5c1d64a457abd4bacf4a2b0",
+          "name": "肯德基疯狂全家桶#67265",
+          "championId": "21"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "ny7aJZjSUd9B8IxFjQbe3g==",
@@ -182,7 +320,30 @@
       "mvp": false,
       "svp": true,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:32.808Z"
+      "detailsFetchedAt": "2026-09-03T14:23:32.808Z",
+      "teammates": [
+        {
+          "id": "c0ff22098af19180c28538cd59ad170e",
+          "name": "也想数星星#30140",
+          "championId": "420"
+        },
+        {
+          "id": "084f8cdb6959a96da4405b4c952c6174",
+          "name": "生hao是一只Ju#57738",
+          "championId": "21"
+        },
+        {
+          "id": "6173f2fbd843aedcf01ae285b8963e90",
+          "name": "蛋蛋de蛋疼#83613",
+          "championId": "30"
+        },
+        {
+          "id": "88e5fa8b5e1314daed5b326df7205d59",
+          "name": "forever花满楼#38179",
+          "championId": "245"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "6tf/LU0iuLkk/zFfmNf2LQ==",
@@ -206,7 +367,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:33.054Z"
+      "detailsFetchedAt": "2026-09-03T14:23:33.054Z",
+      "teammates": [
+        {
+          "id": "55e2339b63e419488ead3e8597136418",
+          "name": "kiwi丶青澄#14358",
+          "championId": "121"
+        },
+        {
+          "id": "18911cf5d0408482a502a138d60d50dd",
+          "name": "佛系纯欲少年i#14645",
+          "championId": "254"
+        },
+        {
+          "id": "8168376a85578d3cc5144708ea3a718d",
+          "name": "诗词小言#69270",
+          "championId": "233"
+        },
+        {
+          "id": "8d94ec674f0b6ae7dbf30d00db784cce",
+          "name": "宋元明清2013#20159",
+          "championId": "82"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "PcQxcrbqsMc5/9zjJ2tGFw==",
@@ -230,7 +414,30 @@
       "mvp": true,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:33.539Z"
+      "detailsFetchedAt": "2026-09-03T14:23:33.539Z",
+      "teammates": [
+        {
+          "id": "1b7e57a5544947567ffbd09b68ac1e92",
+          "name": "MilkyJ#56555",
+          "championId": "875"
+        },
+        {
+          "id": "4819ecc6a87e56840bed6d333f04e0e0",
+          "name": "上山竹鼠#22659",
+          "championId": "122"
+        },
+        {
+          "id": "18911cf5d0408482a502a138d60d50dd",
+          "name": "佛系纯欲少年i#14645",
+          "championId": "147"
+        },
+        {
+          "id": "55e2339b63e419488ead3e8597136418",
+          "name": "kiwi丶青澄#14358",
+          "championId": "74"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     },
     {
       "id": "UhbWyMz7LMxYsRrPAtRfaw==",
@@ -254,7 +461,30 @@
       "mvp": false,
       "svp": false,
       "detailState": "ready",
-      "detailsFetchedAt": "2026-09-03T14:23:33.697Z"
+      "detailsFetchedAt": "2026-09-03T14:23:33.697Z",
+      "teammates": [
+        {
+          "id": "55e2339b63e419488ead3e8597136418",
+          "name": "kiwi丶青澄#14358",
+          "championId": "147"
+        },
+        {
+          "id": "18911cf5d0408482a502a138d60d50dd",
+          "name": "佛系纯欲少年i#14645",
+          "championId": "236"
+        },
+        {
+          "id": "db38e6d91a6a895e8ab630576531b12b",
+          "name": "手残队友都想玩c#45640",
+          "championId": "53"
+        },
+        {
+          "id": "18493ad7ad06b59a85f2f59f9b6e4132",
+          "name": "屁屁是我女神丶哈#47080",
+          "championId": "14"
+        }
+      ],
+      "teammatesFetchedAt": "2026-09-04T03:11:14.406Z"
     }
   ],
   "warnings": [

@@ -61,7 +61,7 @@ function context(){
 for(const style of ['overview','highlight']){
   const ctx=context();drawReport(ctx,{data:fixture,report,style,hideName:true,highlight:report.damageMatch,highlightLabel:'本次样本 · 单场伤害最高'});
   const drawn=ctx.calls.join('\n');assert.ok(drawn.includes('神秘海斗玩家'));assert.equal(drawn.includes(fixture.player.split('#')[0]),false);assert.ok(drawn.includes('非段位 / 全服排名'));assert.ok(drawn.includes('真实样本'));
-  if(style==='overview'){assert.ok(drawn.includes(report.persona.title));assert.ok(drawn.includes(report.persona.label));assert.equal(drawn.includes('每分钟伤害'),false);assert.equal(drawn.includes('整体 KDA'),false);}
+  if(style==='overview'){for(const tag of report.persona.tags)assert.ok(drawn.includes(tag.title));assert.ok(drawn.includes(report.persona.title));assert.ok(drawn.includes(report.persona.label));assert.equal(drawn.includes('每分钟伤害'),false);assert.equal(drawn.includes('整体 KDA'),false);}
 }
 console.log('PASS: official champion tags, dual-role splitting, percentages sum to 100, mixed/insufficient/unknown coverage, mode isolation, missing-detail badge gates, streak boundaries and persona PNG text.');
 console.log('PASS: observed mayhem sample, evidence-bound titles, insufficient/partial/mixed data, highlight selection and tie order, private-name text/image exports, both drawing paths.');

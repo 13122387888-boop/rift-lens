@@ -1,5 +1,6 @@
 import { formatNumber as fmt, type MayhemReport, type ReportStyle } from "./mayhem-report";
 import type { Match, Snapshot } from "./model";
+import { loadChampionPortrait } from "./champion-image";
 
 export const CARD_WIDTH = 1080,
   CARD_HEIGHT = 1350;
@@ -10,10 +11,14 @@ export type CardOptions = {
   hideName: boolean;
   highlight: Match | null;
   highlightLabel: string;
+  highlightMetric?: "damage" | "score" | "participation";
 };
-// Data graphics only: no remote images, fonts or HTML capture, so exports do not
-// depend on cross-origin assets or include the controls around the preview.
-export function drawReport(ctx: CanvasRenderingContext2D, options: CardOptions) {
+// Portraits are hosted with the app so the canvas remains safe to export.
+export function drawReport(
+  ctx: CanvasRenderingContext2D,
+  options: CardOptions,
+  portrait: CanvasImageSource | null = null,
+) {
   const { data, report, style, hideName, highlight, highlightLabel } = options;
   const W = CARD_WIDTH,
     H = CARD_HEIGHT;
@@ -71,22 +76,49 @@ export function drawReport(ctx: CanvasRenderingContext2D, options: CardOptions) 
       highlight.win === true ? "这一把，火力全开。" : "这一把，也值得留念。",
       72,
       279,
-      69,
+      61,
       "#ffdc96",
       700,
+      724,
     );
-    text(highlightLabel + " · " + highlight.champion, 72, 377, 35, "#c7d7e3", 500);
+    ctx.fillStyle = "#d5b477";
+    ctx.fillRect(816, 266, 192, 192);
+    if (portrait) ctx.drawImage(portrait, 824, 274, 176, 176);
+    else {
+      panel(824, 274, 176, 176);
+      text(highlight.champion.slice(0, 1), 872, 303, 68, "#d6c596", 600, 100);
+      text("头像暂缺", 852, 405, 24, "#a6b9c8", 400, 144);
+    }
+    text(highlight.champion, 72, 367, 45, "#e8ece6", 600, 720);
+    text(highlightLabel, 72, 429, 27, "#adc2d3", 400, 720);
     text(
       highlight.date +
         " · " +
         (highlight.win === true ? "胜利" : highlight.win === false ? "失败" : "胜负未判定"),
       72,
-      430,
-      26,
+      476,
+      25,
       highlight.win === true ? "#70dcca" : "#e4adbf",
     );
-    text(fmt(highlight.damage, 0), 64, 493, 138, "#fff", 700, 850);
-    text("单场伤害", 76, 653, 30, "#a6c1d0");
+    const metric = options.highlightMetric ?? "damage";
+    const metricValue = highlight[metric];
+    text(
+      fmt(metricValue, metric === "damage" ? 0 : 1) +
+        (metric === "participation" && metricValue !== null ? "%" : ""),
+      64,
+      532,
+      119,
+      "#fff",
+      700,
+      920,
+    );
+    text(
+      { damage: "单场伤害", score: "本场对局评分", participation: "本场参团率" }[metric],
+      76,
+      670,
+      29,
+      "#a6c1d0",
+    );
     line(721);
     const values = [
       {
@@ -142,12 +174,26 @@ export function drawReport(ctx: CanvasRenderingContext2D, options: CardOptions) 
       text(hero.count + " 场 · " + hero.roleLabel, x + 20, 925, 23, "#a6bcca", 400, 268);
     });
     if (!persona.heroes.length) text("查一查战绩，收集你的英雄故事。", 72, 877, 30, "#adc4cf");
-    const badges = persona.tags.slice(0, 2);
+    const badges = persona.tags.slice(0, 3);
     if (badges.length) {
       badges.forEach((badge, i) => {
-        const x = 72 + i * 478;
-        text(badge.title, x, 1006, 33, "#e9ce93", 600, 456);
-        text(badge.evidence, x, 1055, 22, "#a2b7c7", 400, 448);
+        const x = 72 + i * 318;
+        panel(x, 990, 300, 115);
+        text(badge.title, x + 16, 1004, 31, "#e9ce93", 600, 270);
+        ctx.font = '400 21px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif';
+        const lines: string[] = [];
+        let line = "";
+        for (const ch of badge.evidence) {
+          if (line && ctx.measureText(line + ch).width > 268) {
+            lines.push(line);
+            line = "";
+          }
+          line += ch;
+        }
+        if (line) lines.push(line);
+        lines
+          .slice(0, 2)
+          .forEach((value, j) => text(value, x + 16, 1048 + j * 25, 21, "#a2b7c7", 400, 268));
       });
     } else {
       text(persona.evidence, 72, 1008, 28, "#b8c9d4");
@@ -180,7 +226,11 @@ export async function makeReportPng(options: CardOptions): Promise<Blob> {
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("当前浏览器无法生成图片，请使用截图。");
-  drawReport(ctx, options);
+  const portrait =
+    options.style === "highlight" && options.highlight
+      ? await loadChampionPortrait(options.highlight.championId)
+      : null;
+  drawReport(ctx, options, portrait);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("图片生成失败，请重试。"))),

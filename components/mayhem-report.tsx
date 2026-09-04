@@ -1,6 +1,6 @@
 /* oxlint-disable next/no-img-element -- Standalone static Vite app uses native images. */
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { ArrowUpRight, Download, Copy, LoaderCircle, Sparkles, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -45,6 +45,11 @@ function PosterPlaceholder({
           </span>
         ))}
       </div>
+      <div className="poster-tag-preview">
+        {report.persona.tags.map((tag) => (
+          <span key={tag.title}>{tag.title}</span>
+        ))}
+      </div>
       <p className="poster-reason">
         {data.loading
           ? "详情补齐后生成高清战报…"
@@ -71,6 +76,7 @@ export function MayhemReportPanel({
   onSelect: (r: Match) => void;
 }) {
   const report = useMemo(() => mayhemReport(data), [data]);
+  const previewRef = useRef<HTMLDivElement>(null);
   const [hideName, setHideName] = useState(false),
     [style, setStyle] = useState<ReportStyle>("overview");
   const [highlightKey, setHighlightKey] = useState("damage"),
@@ -85,6 +91,7 @@ export function MayhemReportPanel({
       hideName,
       highlight: selected.row,
       highlightLabel: "本次样本 · " + selected.label,
+      highlightMetric: selected.key,
     }),
     [data, report, style, hideName, selected],
   );
@@ -134,7 +141,7 @@ export function MayhemReportPanel({
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setMessage("已生成 PNG。若浏览器没有开始下载，可长按或右键保存左侧图片。");
+    setMessage("已生成 PNG。若未开始下载，可长按上方图片保存。");
   }
   async function copyImage() {
     if (!ready || !prepared) return;
@@ -197,24 +204,10 @@ export function MayhemReportPanel({
           </label>
         </div>
         <div className="mayhem-studio-grid">
-          <div className="report-preview">
+          <div className="report-preview" ref={previewRef}>
             <TabsContent value="overview">{preview}</TabsContent>
             <TabsContent value="highlight">{preview}</TabsContent>
-            <p>1080 × 1350 高清 PNG · 预览即保存内容</p>
-          </div>
-          <div className="mayhem-story">
-            <p className="eyebrow">SAVE YOUR MOMENT</p>
-            <h3>{style === "overview" ? report.persona.title : "这一局，单独晒。"}</h3>
-            <p>
-              {style === "overview"
-                ? report.persona.label + " · " + report.persona.quote
-                : "已选 " +
-                  (selected.row?.champion ?? "—") +
-                  " · " +
-                  selected.label +
-                  "。战报保留实际胜负。"}
-            </p>
-            {style === "overview" && <PersonaDetails persona={report.persona} />}
+            <p>1080 × 1350 高清 PNG · 长按图片也可保存</p>
             <div className="report-actions">
               <Button className="save-report" onClick={saveImage} disabled={!ready}>
                 <Download size={18} />
@@ -235,8 +228,29 @@ export function MayhemReportPanel({
                   ? "正在逐场补齐详情…"
                   : !report.complete
                     ? "详情未齐，更新数据后即可生成。"
-                    : "发给开黑搭子，看看你们分别是哪一派。")}
+                    : !ready
+                      ? "正在生成高清图片…"
+                      : "发给开黑搭子，看看你们分别是哪一派。")}
             </output>
+          </div>
+          <div className="mayhem-story">
+            <p className="eyebrow">SAVE YOUR MOMENT</p>
+            <h3>{style === "overview" ? report.persona.title : "这一局，单独晒。"}</h3>
+            <p>
+              {style === "overview"
+                ? report.persona.label + " · " + report.persona.quote
+                : "已选 " +
+                  (selected.row?.champion ?? "—") +
+                  " · " +
+                  selected.label +
+                  "。战报保留实际胜负。"}
+            </p>
+            {style === "overview" && (
+              <details className="persona-more">
+                <summary>查看画像依据与常玩英雄</summary>
+                <PersonaDetails persona={report.persona} />
+              </details>
+            )}
             <div className="moments-heading">
               <h4>选一场，生成单局高光</h4>
               <span>只比较本次样本</span>
@@ -250,6 +264,12 @@ export function MayhemReportPanel({
                   onClick={() => {
                     setHighlightKey(h.key);
                     setStyle("highlight");
+                    previewRef.current?.scrollIntoView({
+                      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                        ? "auto"
+                        : "smooth",
+                      block: "start",
+                    });
                   }}
                   aria-pressed={style === "highlight" && highlightKey === h.key}
                   className="mayhem-moment"

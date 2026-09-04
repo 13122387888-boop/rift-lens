@@ -30,12 +30,12 @@ export const AREAS: Record<string, number> = {
   峡谷之巅: 31,
 };
 export const MODES = {
-  mayhem: { id: 1, label: '海克斯大乱斗' },
-  ranked: { id: 2, label: '单双排位' },
-  flex: { id: 3, label: '灵活排位' },
-  normal: { id: 4, label: '匹配对局' },
-  aram: { id: 5, label: '极地大乱斗' },
-  all: { id: 1, label: '全部模式' },
+  mayhem: { id: 1, label: "海克斯大乱斗" },
+  ranked: { id: 2, label: "单双排位" },
+  flex: { id: 3, label: "灵活排位" },
+  normal: { id: 4, label: "匹配对局" },
+  aram: { id: 5, label: "极地大乱斗" },
+  all: { id: 1, label: "全部模式" },
 };
 export type Mode = keyof typeof MODES;
 export type Query = {
@@ -44,6 +44,11 @@ export type Query = {
   mode: Mode;
   count: number;
   refresh?: boolean;
+};
+export type Teammate = {
+  id: string;
+  name: string;
+  championId: string;
 };
 export type Match = {
   id: string;
@@ -63,8 +68,10 @@ export type Match = {
   gold: number | null;
   damage: number | null;
   participation?: number | null;
-  detailState?: 'pending' | 'ready' | 'unavailable';
+  detailState?: "pending" | "ready" | "unavailable";
   detailsFetchedAt?: string;
+  teammates?: Teammate[];
+  teammatesFetchedAt?: string;
   position: string;
   mvp: boolean;
   svp: boolean;
@@ -91,27 +98,24 @@ export type Snapshot = {
 };
 // The source calls this queue 海斗; KIWI is the observed detail gameMode.
 export function isMayhemMatch(match: { queue: string; mode?: string }) {
-  return (
-    match.mode === 'KIWI' || ['海斗', '海克斯大乱斗'].includes(match.queue)
-  );
+  return match.mode === "KIWI" || ["海斗", "海克斯大乱斗"].includes(match.queue);
 }
 export function validateQuery(input: unknown): Query {
-  if (!input || typeof input !== 'object') throw new Error('请填写查询条件。');
+  if (!input || typeof input !== "object") throw new Error("请填写查询条件。");
   const q = input as Record<string, unknown>;
   if (
-    typeof q.player !== 'string' ||
+    typeof q.player !== "string" ||
     q.player.trim().length > 70 ||
     !/^\S[^#\r\n]{0,49}#[^#\s]{1,16}$/.test(q.player.trim())
   )
-    throw new Error('请输入完整 Riot ID，例如：吃饱饱睡早早#13459。');
-  if (typeof q.area !== 'string' || !Object.hasOwn(AREAS, q.area))
-    throw new Error('请选择有效大区。');
-  if (typeof q.mode !== 'string' || !Object.hasOwn(MODES, q.mode))
-    throw new Error('请选择有效对局模式。');
-  if (typeof q.count !== 'number' || ![10, 20, 30].includes(q.count))
-    throw new Error('场次必须为 10、20 或 30。');
-  if (q.refresh !== undefined && typeof q.refresh !== 'boolean')
-    throw new Error('更新参数无效。');
+    throw new Error("请输入完整 Riot ID，例如：吃饱饱睡早早#13459。");
+  if (typeof q.area !== "string" || !Object.hasOwn(AREAS, q.area))
+    throw new Error("请选择有效大区。");
+  if (typeof q.mode !== "string" || !Object.hasOwn(MODES, q.mode))
+    throw new Error("请选择有效对局模式。");
+  if (typeof q.count !== "number" || ![10, 20, 30].includes(q.count))
+    throw new Error("场次必须为 10、20 或 30。");
+  if (q.refresh !== undefined && typeof q.refresh !== "boolean") throw new Error("更新参数无效。");
   return {
     player: q.player.trim(),
     area: q.area,

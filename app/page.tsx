@@ -40,6 +40,7 @@ import sample from "@/lib/mayhem-seed.json";
 import { MayhemReportPanel, MayhemTrend } from "@/components/mayhem-report";
 import { PerformanceReview } from "@/components/performance-review";
 import { OptionalAnalysis } from "@/components/player-persona";
+import { CompanionsPanel } from "@/components/companions";
 import { championRoles, playerPersona, ROLE_INFO } from "@/lib/player-persona";
 import { performance } from "@/lib/performance";
 import { fetchQuery } from "@/lib/query-client";
@@ -489,6 +490,7 @@ export default function Home() {
           </div>
         )}
         {data.mode === "mayhem" && <MayhemReportPanel data={data} onSelect={setSelected} />}
+        {data.mode === "mayhem" && <CompanionsPanel data={data} onSelect={setSelected} />}
         <OptionalAnalysis collapsed={data.mode === "mayhem"}>
           <section className="stats-grid">
             <article className="stat">
