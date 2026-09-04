@@ -9,7 +9,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build && node scripts/after-build.mjs",
     "preview": "vite preview --host 127.0.0.1",
-    "lint": "oxlint app lib components/analytics.tsx components/mayhem-report.tsx components/elo-reference.tsx",
+    "lint": "oxlint app lib components/analytics.tsx components/mayhem-report.tsx components/elo-reference.tsx components/player-persona.tsx",
     "test": "node tests/analytics.test.cjs && node tests/mayhem-report.test.cjs && node tests/pages-query.test.cjs"
   },
   "dependencies": {

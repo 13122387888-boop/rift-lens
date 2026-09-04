@@ -1,27 +1,15 @@
 /* oxlint-disable next/no-img-element -- Standalone static Vite app uses native images. */
-'use client';
-import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowUpRight,
-  Download,
-  Copy,
-  LoaderCircle,
-  Sparkles,
-  Swords,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ChampionIcon, TrendChart } from './analytics';
-import {
-  mayhemReport,
-  formatNumber as fmt,
-  reportText,
-  type ReportStyle,
-  type MayhemReport,
-} from '@/lib/mayhem-report';
-import { makeReportPng, type CardOptions } from '@/lib/report-image';
-import type { Match, Snapshot } from '@/lib/model';
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowUpRight, Download, Copy, LoaderCircle, Sparkles, Swords } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ChampionIcon, TrendChart } from "./analytics";
+import { PersonaDetails } from "./player-persona";
+import { mayhemReport, reportText, type ReportStyle, type MayhemReport } from "@/lib/mayhem-report";
+import { makeReportPng, type CardOptions } from "@/lib/report-image";
+import type { Match, Snapshot } from "@/lib/model";
 
 function PosterPlaceholder({
   data,
@@ -33,59 +21,36 @@ function PosterPlaceholder({
   hideName: boolean;
 }) {
   return (
-    <article
-      className="share-poster poster-placeholder"
-      aria-label="正在准备海斗战报"
-    >
+    <article className="share-poster poster-placeholder" aria-label="正在准备海斗战报">
       <div className="poster-top">
         <span>对局透镜 / 海斗档案</span>
-        <span>{data.isSample ? '真实样本' : '个人战报'}</span>
+        <span>{data.isSample ? "真实样本" : "个人战报"}</span>
       </div>
       <p className="poster-player">
-        {hideName ? '神秘海斗玩家' : data.player.split('#')[0]}
+        {hideName ? "神秘海斗玩家" : data.player.split("#")[0]}
         <small>
           {data.area} · 最近 {report.rows.length} 场海斗
         </small>
       </p>
       <p className="poster-overline">MY MAYHEM IDENTITY</p>
-      <h3>{report.title}</h3>
-      <p className="poster-reason">{report.reason}</p>
-      <div className="poster-score">
-        <strong>
-          {fmt(report.stats.winrate, 0)}
-          <small>%</small>
-        </strong>
-        <div>
-          <b>
-            {report.stats.wins} 胜 / {report.stats.losses} 负
-          </b>
-          <span>近期胜率</span>
-        </div>
-      </div>
-      <div className="poster-metrics">
-        <div>
-          <strong>{fmt(report.rates.dpm.value, 0)}</strong>
-          <span>每分钟伤害</span>
-        </div>
-        <div>
-          <strong>{fmt(report.rates.participation.value)}%</strong>
-          <span>参团率</span>
-        </div>
-        <div>
-          <strong>{fmt(report.stats.kda)}</strong>
-          <span>整体 KDA</span>
-        </div>
-        <div>
-          <strong>{fmt(report.stats.score)}</strong>
-          <span>平均评分</span>
-        </div>
+      <h3>{report.persona.title}</h3>
+      <p className="poster-reason">
+        {report.persona.label} · {report.persona.quote}
+      </p>
+      <div className="placeholder-role-list">
+        {report.persona.distribution.map((role) => (
+          <span key={role.key}>
+            {role.label}
+            <b>{report.persona.classified ? role.percent + "%" : "—"}</b>
+          </span>
+        ))}
       </div>
       <p className="poster-reason">
         {data.loading
-          ? '详情补齐后生成高清战报…'
+          ? "详情补齐后生成高清战报…"
           : report.complete
-            ? '正在生成高清预览…'
-            : '详情未齐，可先更新数据再生成战报。'}
+            ? "正在生成高清预览…"
+            : "详情未齐，可先更新数据再生成战报。"}
       </p>
       <div className="poster-footer">
         <b>RIFT LENS</b>
@@ -107,13 +72,11 @@ export function MayhemReportPanel({
 }) {
   const report = useMemo(() => mayhemReport(data), [data]);
   const [hideName, setHideName] = useState(false),
-    [style, setStyle] = useState<ReportStyle>('overview');
-  const [highlightKey, setHighlightKey] = useState('damage'),
-    [message, setMessage] = useState(''),
+    [style, setStyle] = useState<ReportStyle>("overview");
+  const [highlightKey, setHighlightKey] = useState("damage"),
+    [message, setMessage] = useState(""),
     [copying, setCopying] = useState(false);
-  const selected =
-    report.highlights.find((h) => h.key === highlightKey) ??
-    report.highlights[0];
+  const selected = report.highlights.find((h) => h.key === highlightKey) ?? report.highlights[0];
   const options = useMemo<CardOptions>(
     () => ({
       data,
@@ -121,7 +84,7 @@ export function MayhemReportPanel({
       style,
       hideName,
       highlight: selected.row,
-      highlightLabel: '本次样本 · ' + selected.label,
+      highlightLabel: "本次样本 · " + selected.label,
     }),
     [data, report, style, hideName, selected],
   );
@@ -132,18 +95,17 @@ export function MayhemReportPanel({
   } | null>(null);
   useEffect(() => {
     let cancelled = false,
-      url = '';
+      url = "";
     if (report.complete)
       void makeReportPng(options)
         .then((blob) => {
           if (cancelled) return;
           url = URL.createObjectURL(blob);
           setPrepared({ options, blob, url });
-          setMessage('');
+          setMessage("");
         })
         .catch((e) => {
-          if (!cancelled)
-            setMessage(e instanceof Error ? e.message : '战报生成失败。');
+          if (!cancelled) setMessage(e instanceof Error ? e.message : "战报生成失败。");
         });
     return () => {
       cancelled = true;
@@ -154,40 +116,38 @@ export function MayhemReportPanel({
   function saveImage() {
     if (!ready || !prepared) return;
     const name = hideName
-      ? '神秘玩家'
+      ? "神秘玩家"
       : data.player
-          .split('#')[0]
-          .replace(/[^\p{L}\p{N}_-]/gu, '')
-          .slice(0, 24) || '玩家';
-    const a = document.createElement('a');
+          .split("#")[0]
+          .replace(/[^\p{L}\p{N}_-]/gu, "")
+          .slice(0, 24) || "玩家";
+    const a = document.createElement("a");
     a.href = prepared.url;
     a.download =
-      '海斗' +
-      (style === 'highlight' ? '高光' : '战报') +
-      '-' +
+      "海斗" +
+      (style === "highlight" ? "高光" : "战报") +
+      "-" +
       name +
-      '-' +
+      "-" +
       data.fetchedAt.slice(0, 10) +
-      '.png';
+      ".png";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setMessage('已生成 PNG。若浏览器没有开始下载，可长按或右键保存左侧图片。');
+    setMessage("已生成 PNG。若浏览器没有开始下载，可长按或右键保存左侧图片。");
   }
   async function copyImage() {
     if (!ready || !prepared) return;
-    if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
-      setMessage('当前浏览器不支持复制图片，请使用“保存战报”。');
+    if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+      setMessage("当前浏览器不支持复制图片，请使用“保存战报”。");
       return;
     }
     setCopying(true);
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': prepared.blob }),
-      ]);
-      setMessage('图片已复制，可以粘贴到聊天窗口。');
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": prepared.blob })]);
+      setMessage("图片已复制，可以粘贴到聊天窗口。");
     } catch {
-      setMessage('图片复制未成功，请使用“保存战报”。');
+      setMessage("图片复制未成功，请使用“保存战报”。");
     } finally {
       setCopying(false);
     }
@@ -209,24 +169,18 @@ export function MayhemReportPanel({
       <div className="mayhem-intro">
         <div>
           <p className="eyebrow">ARAM MAYHEM / YOUR MOMENT</p>
-          <h2>这 {report.rows.length} 场，有你的名场面。</h2>
-          <p>近 {report.rows.length} 场海斗，一张战报留下高光。</p>
+          <h2>这 {report.rows.length} 场，你是哪一派？</h2>
+          <p>把你的英雄口味，做成一张开黑名片。</p>
         </div>
         <span className="mayhem-edition">
           <Sparkles size={16} />
           海斗战报
         </span>
       </div>
-      <Tabs
-        value={style}
-        onValueChange={(v) => setStyle(v as ReportStyle)}
-        className="report-tabs"
-      >
+      <Tabs value={style} onValueChange={(v) => setStyle(v as ReportStyle)} className="report-tabs">
         <div className="report-toolbar">
           <TabsList aria-label="战报模板">
-            <TabsTrigger value="overview">
-              近 {report.rows.length} 场总览
-            </TabsTrigger>
+            <TabsTrigger value="overview">我的玩家卡</TabsTrigger>
             <TabsTrigger value="highlight" disabled={!selected.row}>
               高光单局
             </TabsTrigger>
@@ -250,49 +204,38 @@ export function MayhemReportPanel({
           </div>
           <div className="mayhem-story">
             <p className="eyebrow">SAVE YOUR MOMENT</p>
-            <h3>
-              {style === 'overview'
-                ? '给这段海斗，留张战报。'
-                : '这一局，单独晒。'}
-            </h3>
+            <h3>{style === "overview" ? report.persona.title : "这一局，单独晒。"}</h3>
             <p>
-              {style === 'overview'
-                ? report.reason
-                : '已选 ' +
-                  (selected.row?.champion ?? '—') +
-                  ' · ' +
+              {style === "overview"
+                ? report.persona.label + " · " + report.persona.quote
+                : "已选 " +
+                  (selected.row?.champion ?? "—") +
+                  " · " +
                   selected.label +
-                  '。战报保留实际胜负。'}
+                  "。战报保留实际胜负。"}
             </p>
+            {style === "overview" && <PersonaDetails persona={report.persona} />}
             <div className="report-actions">
-              <Button
-                className="save-report"
-                onClick={saveImage}
-                disabled={!ready}
-              >
+              <Button className="save-report" onClick={saveImage} disabled={!ready}>
                 <Download size={18} />
-                保存战报
+                {style === "overview" ? "保存玩家卡" : "保存高光"}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => void copyImage()}
                 disabled={!ready || copying}
               >
-                {copying ? (
-                  <LoaderCircle size={17} className="animate-spin" />
-                ) : (
-                  <Copy size={17} />
-                )}
+                {copying ? <LoaderCircle size={17} className="animate-spin" /> : <Copy size={17} />}
                 复制图片
               </Button>
             </div>
             <output className="report-feedback" aria-live="polite">
               {message ||
                 (data.loading
-                  ? '正在逐场补齐详情…'
+                  ? "正在逐场补齐详情…"
                   : !report.complete
-                    ? '详情未齐，更新数据后即可生成。'
-                    : '截图、保存或复制，分享方式由你决定。')}
+                    ? "详情未齐，更新数据后即可生成。"
+                    : "发给开黑搭子，看看你们分别是哪一派。")}
             </output>
             <div className="moments-heading">
               <h4>选一场，生成单局高光</h4>
@@ -306,21 +249,17 @@ export function MayhemReportPanel({
                   disabled={!h.row || !report.complete}
                   onClick={() => {
                     setHighlightKey(h.key);
-                    setStyle('highlight');
+                    setStyle("highlight");
                   }}
-                  aria-pressed={style === 'highlight' && highlightKey === h.key}
+                  aria-pressed={style === "highlight" && highlightKey === h.key}
                   className="mayhem-moment"
                 >
                   <span className="moment-icon">
-                    {h.row ? (
-                      <ChampionIcon id={h.row.championId} />
-                    ) : (
-                      <Swords />
-                    )}
+                    {h.row ? <ChampionIcon id={h.row.championId} /> : <Swords />}
                   </span>
                   <span>
                     <small>{h.label}</small>
-                    <b>{h.row?.champion ?? '等待详情'}</b>
+                    <b>{h.row?.champion ?? "等待详情"}</b>
                     <small>{h.row?.date}</small>
                   </span>
                   <strong>
@@ -331,18 +270,15 @@ export function MayhemReportPanel({
                 </Button>
               ))}
             </div>
-            {style === 'highlight' && selected.row && (
-              <Button
-                variant="ghost"
-                onClick={() => selected.row && onSelect(selected.row)}
-              >
+            {style === "highlight" && selected.row && (
+              <Button variant="ghost" onClick={() => selected.row && onSelect(selected.row)}>
                 查看这场完整数据 <ArrowUpRight size={15} />
               </Button>
             )}
             <p className="mayhem-share-note">
               {report.coverage}
-              。称号是本次数据触发的趣味标签，不代表全服排名或真实 MMR。
-              <a href="#mayhem-rules">查看称号规则</a>
+              。画像来自本次出场英雄，海斗随机选人也会影响结果。
+              <a href="#mayhem-rules">查看标签规则</a>
             </p>
           </div>
         </div>
@@ -365,8 +301,7 @@ export function MayhemTrend({ data }: { data: Snapshot }) {
         <TrendChart data={report.stats.series} metric="score" ema={false} />
       </div>
       <p className="review-formula">
-        评分按数据源原值展示。海斗暂未取得可验证的个人
-        MMR，不用排位段位替代海斗表现。
+        评分按数据源原值展示。海斗暂未取得可验证的个人 MMR，不用排位段位替代海斗表现。
       </p>
     </section>
   );

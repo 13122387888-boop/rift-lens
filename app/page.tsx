@@ -1,6 +1,6 @@
-'use client';
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { flushSync } from 'react-dom';
+"use client";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { flushSync } from "react-dom";
 import {
   Crosshair,
   Search,
@@ -15,40 +15,35 @@ import {
   AlertCircle,
   Clock3,
   Target,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from '@/components/ui/sheet';
-import { ChampionIcon, TrendChart } from '@/components/analytics';
-import { analyze, mean } from '@/lib/analysis';
-import { RankLabel, EloReference } from '@/components/elo-reference';
-import {
-  AREAS,
-  MODES,
-  validateQuery,
-  type Snapshot,
-  type Match,
-  type Mode,
-} from '@/lib/model';
-import sample from '@/lib/mayhem-seed.json';
-import { MayhemReportPanel, MayhemTrend } from '@/components/mayhem-report';
-import { PerformanceReview } from '@/components/performance-review';
-import { performance } from '@/lib/performance';
-import { fetchQuery } from '@/lib/query-client';
-import { Progress } from '@/components/ui/progress';
+} from "@/components/ui/sheet";
+import { ChampionIcon, TrendChart } from "@/components/analytics";
+import { analyze, mean } from "@/lib/analysis";
+import { RankLabel, EloReference } from "@/components/elo-reference";
+import { AREAS, MODES, validateQuery, type Snapshot, type Match, type Mode } from "@/lib/model";
+import sample from "@/lib/mayhem-seed.json";
+import { MayhemReportPanel, MayhemTrend } from "@/components/mayhem-report";
+import { PerformanceReview } from "@/components/performance-review";
+import { OptionalAnalysis } from "@/components/player-persona";
+import { championRoles, playerPersona, ROLE_INFO } from "@/lib/player-persona";
+import { performance } from "@/lib/performance";
+import { fetchQuery } from "@/lib/query-client";
+import { Progress } from "@/components/ui/progress";
 const initialSample = {
   ...sample,
   requested: 10,
@@ -56,17 +51,15 @@ const initialSample = {
   warnings: [],
 } as Snapshot;
 const fmt = (n: number | null | undefined) =>
-  n === null || n === undefined
-    ? '—'
-    : n.toLocaleString('zh-CN', { maximumFractionDigits: 1 });
+  n === null || n === undefined ? "—" : n.toLocaleString("zh-CN", { maximumFractionDigits: 1 });
 const duration = (n: number | null) =>
-  n === null ? '时长未提供' : Math.floor(n / 60) + ' 分 ' + (n % 60) + ' 秒';
+  n === null ? "时长未提供" : Math.floor(n / 60) + " 分 " + (n % 60) + " 秒";
 const positions: Record<string, string> = {
-  TOP: '上路',
-  JUNGLE: '打野',
-  MIDDLE: '中路',
-  BOTTOM: '下路',
-  UTILITY: '辅助',
+  TOP: "上路",
+  JUNGLE: "打野",
+  MIDDLE: "中路",
+  BOTTOM: "下路",
+  UTILITY: "辅助",
 };
 type AgentTool = {
   name: string;
@@ -79,35 +72,34 @@ export default function Home() {
   const [data, setData] = useState<Snapshot>(initialSample);
   const [player, setPlayer] = useState(sample.player),
     [area, setArea] = useState(sample.area),
-    [mode, setMode] = useState<Mode>('mayhem'),
-    [count, setCount] = useState('10');
+    [mode, setMode] = useState<Mode>("mayhem"),
+    [count, setCount] = useState("10");
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState(''),
-    [status, setStatus] = useState('');
-  const [metric, setMetric] = useState<'teamElo' | 'score'>('score');
-  const [filter, setFilter] = useState('all'),
+    [error, setError] = useState(""),
+    [status, setStatus] = useState("");
+  const [metric, setMetric] = useState<"teamElo" | "score">("score");
+  const [filter, setFilter] = useState("all"),
     [selected, setSelected] = useState<Match | null>(null);
   const lock = useRef(false),
     abort = useRef<AbortController | null>(null);
   const stats = useMemo(() => analyze(data.rows), [data]);
   const shown = data.rows.filter(
-    (r) =>
-      filter === 'all' || (filter === 'win' ? r.win === true : r.win === false),
+    (r) => filter === "all" || (filter === "win" ? r.win === true : r.win === false),
   );
   async function query(input: unknown) {
-    if (lock.current) throw new Error('已有查询正在进行。');
+    if (lock.current) throw new Error("已有查询正在进行。");
     let q;
     try {
       q = validateQuery(input);
     } catch (e) {
-      const message = e instanceof Error ? e.message : '查询参数无效';
+      const message = e instanceof Error ? e.message : "查询参数无效";
       setError(message);
       throw new Error(message);
     }
     lock.current = true;
     setBusy(true);
-    setError('');
-    setStatus('正在获取战绩列表…');
+    setError("");
+    setStatus("正在获取战绩列表…");
     const controller = new AbortController();
     abort.current = controller;
     try {
@@ -118,54 +110,46 @@ export default function Home() {
         (snapshot) => {
           setData(snapshot);
           setSelected((previous) =>
-            previous
-              ? (snapshot.rows.find((r) => r.id === previous.id) ?? null)
-              : null,
+            previous ? (snapshot.rows.find((r) => r.id === previous.id) ?? null) : null,
           );
           if (!receivedList) {
             receivedList = true;
-            setFilter('all');
+            setFilter("all");
             setSelected(null);
             setPlayer(q.player);
             setArea(q.area);
             setMode(q.mode);
             setCount(String(q.count));
-            setMetric(q.mode === 'mayhem' ? 'score' : 'teamElo');
+            setMetric(q.mode === "mayhem" ? "score" : "teamElo");
           }
           setStatus(
             snapshot.loading
-              ? '已取得 ' +
+              ? "已取得 " +
                   snapshot.rows.length +
-                  ' 场战绩，详情 ' +
+                  " 场战绩，详情 " +
                   (snapshot.loaded ?? 0) +
-                  '/' +
+                  "/" +
                   snapshot.rows.length +
-                  ' 已处理' +
+                  " 已处理" +
                   (snapshot.cache?.detailHits
-                    ? ' · 复用 ' + snapshot.cache.detailHits + ' 场详情'
-                    : '')
-              : '正在完成统计…',
+                    ? " · 复用 " + snapshot.cache.detailHits + " 场详情"
+                    : "")
+              : "正在完成统计…",
           );
         },
       );
       flushSync(() => {
         setData(result);
-        setMetric(
-          result.rows.some((r) => r.teamElo !== null) ? 'teamElo' : 'score',
-        );
+        setMetric(result.rows.some((r) => r.teamElo !== null) ? "teamElo" : "score");
         setPlayer(q.player);
         setArea(q.area);
         setMode(q.mode);
         setCount(String(q.count));
         setStatus(
-          (result.cache?.queryHit
-            ? '已复用 1 分钟内的查询结果，共 '
-            : '查询完成，已取得 ') +
+          (result.cache?.queryHit ? "已复用 1 分钟内的查询结果，共 " : "查询完成，已取得 ") +
             result.rows.length +
-            ' 场战绩。' +
-            (result.cache?.detailHits
-              ? '复用 ' + result.cache.detailHits + ' 场详情。'
-              : ''),
+            " 场战绩。" +
+            (result.cache?.detailHits ? "复用 " + result.cache.detailHits + " 场详情。" : ""),
         );
       });
       return {
@@ -177,12 +161,12 @@ export default function Home() {
       };
     } catch (e) {
       const message = controller.signal.aborted
-        ? '查询已取消，保留当前结果。'
+        ? "查询已取消，保留当前结果。"
         : e instanceof Error
           ? e.message
-          : '查询失败，请稍后重试。';
+          : "查询失败，请稍后重试。";
       setError(message);
-      setStatus('');
+      setStatus("");
       throw new Error(message);
     } finally {
       lock.current = false;
@@ -198,10 +182,7 @@ export default function Home() {
     const context = (
       document as Document & {
         modelContext?: {
-          registerTool: (
-            tool: AgentTool,
-            options: { signal: AbortSignal },
-          ) => void | Promise<void>;
+          registerTool: (tool: AgentTool, options: { signal: AbortSignal }) => void | Promise<void>;
         };
       }
     ).modelContext;
@@ -209,30 +190,28 @@ export default function Home() {
     const lifecycle = new AbortController();
     const tools: AgentTool[] = [
       {
-        name: 'query_lol_matches',
-        description:
-          '查询指定 Riot ID 的公开战绩并更新当前可视化看板；会调用数据源。',
+        name: "query_lol_matches",
+        description: "查询指定 Riot ID 的公开战绩并更新当前可视化看板；会调用数据源。",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            player: { type: 'string' },
-            area: { type: 'string', enum: Object.keys(AREAS) },
-            mode: { type: 'string', enum: Object.keys(MODES) },
-            count: { type: 'number', enum: [10, 20, 30], default: 10 },
-            refresh: { type: 'boolean', description: '跳过缓存重新取得数据' },
+            player: { type: "string" },
+            area: { type: "string", enum: Object.keys(AREAS) },
+            mode: { type: "string", enum: Object.keys(MODES) },
+            count: { type: "number", enum: [10, 20, 30], default: 10 },
+            refresh: { type: "boolean", description: "跳过缓存重新取得数据" },
           },
-          required: ['player', 'area', 'mode', 'count'],
+          required: ["player", "area", "mode", "count"],
           additionalProperties: false,
         },
         annotations: { readOnlyHint: false, untrustedContentHint: true },
         execute: (input) => actions.current.query(input),
       },
       {
-        name: 'read_match_analysis',
-        description:
-          '读取看板当前展示的玩家、样本数量、胜率、Team ELO 均值与趋势。',
+        name: "read_match_analysis",
+        description: "读取看板当前展示的玩家、样本数量、胜率、Team ELO 均值与趋势。",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {},
           additionalProperties: false,
         },
@@ -253,15 +232,16 @@ export default function Home() {
             sourceEloSummary: data.elos,
             loading: data.loading ?? false,
             performance: performance(data.rows),
+            playerPersona: data.mode === "mayhem" ? playerPersona(data.rows) : null,
           };
         },
       },
     ];
     for (const tool of tools) {
       try {
-        void Promise.resolve(
-          context.registerTool(tool, { signal: lifecycle.signal }),
-        ).catch(() => {});
+        void Promise.resolve(context.registerTool(tool, { signal: lifecycle.signal })).catch(
+          () => {},
+        );
       } catch {
         /* Optional browser feature. */
       }
@@ -270,19 +250,19 @@ export default function Home() {
   }, []);
   useEffect(() => () => abort.current?.abort(), []);
   const shownSummaryLabel =
-    data.mode === 'mayhem'
-      ? '海克斯大乱斗'
-      : data.mode === 'flex'
-        ? '灵活'
-        : data.mode === 'aram'
-          ? '大乱斗'
-          : '单双';
-  const stamp = new Date(data.fetchedAt).toLocaleString('zh-CN', {
-    timeZone: 'Asia/Shanghai',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
+    data.mode === "mayhem"
+      ? "海克斯大乱斗"
+      : data.mode === "flex"
+        ? "灵活"
+        : data.mode === "aram"
+          ? "大乱斗"
+          : "单双";
+  const stamp = new Date(data.fetchedAt).toLocaleString("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: false,
   });
   const delta = stats.delta;
@@ -299,7 +279,7 @@ export default function Home() {
         </a>
         <nav>
           <a className="nav-active" href="#overview">
-            战绩分析
+            {data.mode === "mayhem" ? "玩家画像" : "战绩分析"}
           </a>
           <a href="#data-notes">数据说明</a>
         </nav>
@@ -312,24 +292,18 @@ export default function Home() {
         <div className="page-heading">
           <div>
             <p className="eyebrow">ARAM MAYHEM / MATCH INSIGHTS</p>
-            <h1>
-              {data.mode === 'mayhem'
-                ? '海斗战绩 · 你的高光战报'
-                : '战绩分析 · 看清对局表现'}
-            </h1>
+            <h1>{data.mode === "mayhem" ? "你的海斗玩家卡" : "战绩分析 · 看清对局表现"}</h1>
           </div>
           <span className="live-tag">
             <Activity size={15} />
-            战绩分析看板
+            {data.mode === "mayhem" ? "看看你是哪一派" : "战绩分析看板"}
           </span>
         </div>
         <form
           className="querybar"
           onSubmit={(e) => {
             e.preventDefault();
-            void query({ player, area, mode, count: Number(count) }).catch(
-              () => {},
-            );
+            void query({ player, area, mode, count: Number(count) }).catch(() => {});
           }}
           aria-busy={busy}
         >
@@ -350,11 +324,7 @@ export default function Home() {
           </label>
           <label htmlFor="region">
             大区
-            <Select
-              disabled={busy}
-              value={area}
-              onValueChange={(v) => v && setArea(v)}
-            >
+            <Select disabled={busy} value={area} onValueChange={(v) => v && setArea(v)}>
               <SelectTrigger id="region" aria-label="大区">
                 <SelectValue>{area}</SelectValue>
               </SelectTrigger>
@@ -369,11 +339,7 @@ export default function Home() {
           </label>
           <label htmlFor="mode">
             对局模式
-            <Select
-              disabled={busy}
-              value={mode}
-              onValueChange={(v) => v && setMode(v as Mode)}
-            >
+            <Select disabled={busy} value={mode} onValueChange={(v) => v && setMode(v as Mode)}>
               <SelectTrigger id="mode" aria-label="对局模式">
                 <SelectValue>{MODES[mode].label}</SelectValue>
               </SelectTrigger>
@@ -388,16 +354,12 @@ export default function Home() {
           </label>
           <label htmlFor="count">
             查询场次
-            <Select
-              disabled={busy}
-              value={count}
-              onValueChange={(v) => v && setCount(v)}
-            >
+            <Select disabled={busy} value={count} onValueChange={(v) => v && setCount(v)}>
               <SelectTrigger id="count" aria-label="查询场次">
                 <SelectValue>最近 {count} 场</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {['10', '20', '30'].map((v) => (
+                {["10", "20", "30"].map((v) => (
                   <SelectItem value={v} key={v}>
                     最近 {v} 场
                   </SelectItem>
@@ -406,15 +368,11 @@ export default function Home() {
             </Select>
           </label>
           <Button type="submit" className="query-button" disabled={busy}>
-            {busy ? (
-              <LoaderCircle className="animate-spin" size={17} />
-            ) : (
-              <Search size={17} />
-            )}{' '}
-            {busy ? '查询中…' : '查询战绩'}
+            {busy ? <LoaderCircle className="animate-spin" size={17} /> : <Search size={17} />}{" "}
+            {busy ? "查询中…" : "查询战绩"}
           </Button>
         </form>
-        {mode === 'mayhem' && (
+        {mode === "mayhem" && (
           <p className="mode-hint">
             <Info size={15} />
             海克斯大乱斗会从最近 30 场全部对局中筛选，最多展示所选场数。
@@ -449,11 +407,7 @@ export default function Home() {
         {busy && data.loading && (
           <div className="query-progress">
             <Progress
-              value={
-                data.rows.length
-                  ? ((data.loaded ?? 0) / data.rows.length) * 100
-                  : 0
-              }
+              value={data.rows.length ? ((data.loaded ?? 0) / data.rows.length) * 100 : 0}
               aria-label="单场详情加载进度"
             />
           </div>
@@ -465,61 +419,46 @@ export default function Home() {
           </div>
           <div className="profile-main">
             <h2>
-              {data.player.split('#')[0]}
-              <small>#{data.player.split('#')[1]}</small>
+              {data.player.split("#")[0]}
+              <small>#{data.player.split("#")[1]}</small>
             </h2>
             <p>
               {data.area}
               <span>·</span>
               {MODES[data.mode].label}
-              {data.mode !== 'mayhem' && (
+              {data.mode !== "mayhem" && (
                 <span
                   className="rank-badge"
-                  title={
-                    data.mode === 'flex'
-                      ? '数据源最新灵活排位段位'
-                      : '数据源最新单双排位段位'
-                  }
+                  title={data.mode === "flex" ? "数据源最新灵活排位段位" : "数据源最新单双排位段位"}
                 >
                   <Diamond size={14} />
-                  {data.mode !== 'ranked' && data.mode !== 'flex'
-                    ? '单双段位 · '
-                    : ''}
+                  {data.mode !== "ranked" && data.mode !== "flex" ? "单双段位 · " : ""}
                   {data.rank}
-                  {data.lp !== null ? ' · ' + data.lp + ' LP' : ''}
+                  {data.lp !== null ? " · " + data.lp + " LP" : ""}
                 </span>
               )}
             </p>
           </div>
           <div className="snapshot">
             <span className="tiny-dot" />
-            {data.isSample ? '真实样本 · ' : '查询于 '}
+            {data.isSample ? "真实样本 · " : "查询于 "}
             {stamp}
             <small>
-              {data.mode === 'mayhem'
-                ? '最近 ' +
-                  (data.scanned ?? 30) +
-                  ' 场中 · 海克斯 ' +
-                  data.rows.length +
-                  ' 场'
-                : '请求 ' +
-                  data.requested +
-                  ' 场 · 实际取得 ' +
-                  data.rows.length +
-                  ' 场'}
+              {data.mode === "mayhem"
+                ? "最近 " + (data.scanned ?? 30) + " 场中 · 海克斯 " + data.rows.length + " 场"
+                : "请求 " + data.requested + " 场 · 实际取得 " + data.rows.length + " 场"}
             </small>
           </div>
         </section>
         {!data.isSample && (
           <div className="cache-status">
             <span>
-              {data.cache?.queryHit ? '查询缓存 · 1 分钟内' : '战绩列表已查询'}{' '}
-              ·{' '}
+              {data.cache?.queryHit ? "查询缓存 · 1 分钟内" : "战绩列表已查询"} ·{" "}
               {data.cache?.detailHits
-                ? data.cache.detailHits + ' 场详情来自 6 小时内缓存'
+                ? data.cache.detailHits + " 场详情来自 6 小时内缓存"
                 : data.loading
-                  ? '单场详情逐步加载'
-                  : '详情处理完成'}
+                  ? "单场详情逐步加载"
+                  : "详情处理完成"}
             </span>
             <Button
               type="button"
@@ -540,300 +479,280 @@ export default function Home() {
             </Button>
           </div>
         )}
-        {data.mode === 'mayhem' && (
+        {data.mode === "mayhem" && (
           <div className="mode-result-note">
             <Swords size={17} />
             <span>
               当前统计仅包含海克斯大乱斗。
-              {data.rows.length
-                ? '战报和复盘都使用下方这 ' + data.rows.length + ' 场样本。'
-                : ''}
+              {data.rows.length ? "战报和复盘都使用下方这 " + data.rows.length + " 场样本。" : ""}
             </span>
           </div>
         )}
-        {data.mode === 'mayhem' && (
-          <MayhemReportPanel data={data} onSelect={setSelected} />
-        )}
-        <section className="stats-grid">
-          <article className="stat">
-            <p>
-              近期胜率
-              <Swords size={17} />
-            </p>
-            <div className="stat-value mint">
-              {fmt(stats.winrate)}
-              <span>%</span>
-            </div>
-            <div className="win-segments">
-              {[...data.rows].reverse().map((r) => (
-                <i
-                  key={r.id}
-                  title={r.win === null ? '未判定' : r.win ? '胜' : '负'}
-                  className={
-                    r.win === null ? 'unknown' : r.win ? 'win' : 'loss'
-                  }
-                />
-              ))}
-            </div>
-            <small>
-              {stats.wins} 胜 {stats.losses} 负
-              {stats.unknown
-                ? ' · ' + stats.unknown + ' 场未判定'
-                : ' · 最近 ' + data.rows.length + ' 场'}
-            </small>
-          </article>
-          <article className="stat">
-            <p>
-              整体 KDA
-              <Crosshair size={17} />
-            </p>
-            <div className="stat-value">
-              {fmt(stats.kda)}
-              <span>: 1</span>
-            </div>
-            <div className="stat-foot">
-              <b>{fmt(stats.kills)}</b> / {fmt(stats.deaths)} /{' '}
-              <b>{fmt(stats.assists)}</b>
-            </div>
-            <small>场均击杀 / 死亡 / 助攻 · {stats.kdaCount} 场</small>
-          </article>
-          <article className="stat">
-            <p>
-              平均对局评分
-              <Activity size={17} />
-            </p>
-            <div className="stat-value">
-              {fmt(stats.score)}
-              <span>分</span>
-            </div>
-            <div className="stat-foot">
-              {data.rows.filter((r) => r.mvp).length} 次 MVP
-              <span className="subtle">·</span>
-              {data.rows.filter((r) => r.svp).length} 次 SVP
-            </div>
-            <small>数据源对局评分 · {stats.scoreCount} 场有值</small>
-          </article>
-          {data.mode === 'mayhem' ? (
+        {data.mode === "mayhem" && <MayhemReportPanel data={data} onSelect={setSelected} />}
+        <OptionalAnalysis collapsed={data.mode === "mayhem"}>
+          <section className="stats-grid">
             <article className="stat">
               <p>
-                平均参团率
+                近期胜率
                 <Swords size={17} />
               </p>
-              <div className="stat-value">
-                {fmt(performance(data.rows).participation.value)}
+              <div className="stat-value mint">
+                {fmt(stats.winrate)}
                 <span>%</span>
               </div>
-              <div className="stat-foot">团战参与，不只看击杀</div>
-              <small>
-                {performance(data.rows).participation.count}/{data.rows.length}{' '}
-                场有值 · 数据源百分比
-              </small>
-            </article>
-          ) : (
-            <article className="stat">
-              <p>
-                平均 Team ELO
-                <TrendingUp size={17} />
-              </p>
-              <div className="stat-value">{fmt(stats.elo)}</div>
-              <div className="stat-foot">
-                <RankLabel value={stats.elo} />
-                {stats.elo === null && (
-                  <span>
-                    {stats.eloCount === 0
-                      ? data.loading
-                        ? '详情加载中…'
-                        : '数据源未提供'
-                      : '样本不满足同模式完整条件'}
-                  </span>
-                )}
-              </div>
-              <small>
-                本人所在队伍 · {stats.eloCount}/{data.rows.length} 场有值
-              </small>
-            </article>
-          )}
-        </section>
-        <PerformanceReview
-          rows={data.rows}
-          mayhem={data.mode === 'mayhem'}
-          onSelect={setSelected}
-        />
-        {data.mode === 'mayhem' ? (
-          <MayhemTrend data={data} />
-        ) : (
-          <section className="analysis-grid">
-            <article className="panel trend-panel">
-              <div className="panel-heading">
-                <div>
-                  <p className="eyebrow">PERFORMANCE TREND</p>
-                  <h3>
-                    {metric === 'teamElo' ? 'Team ELO 趋势' : '对局评分趋势'}
-                  </h3>
-                </div>
-                <div className="segmented" aria-label="趋势指标">
-                  {(['teamElo', 'score'] as const).map((key) => (
-                    <Button
-                      key={key}
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      aria-pressed={metric === key}
-                      onClick={() => setMetric(key)}
-                    >
-                      {key === 'teamElo' ? 'Team ELO' : '评分'}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div className="chart-legends">
-                <span className="legend">
-                  <i />
-                  {metric === 'teamElo' ? '本人所在队伍' : '单场评分'}
-                </span>
-                {metric === 'teamElo' && stats.allComparable && (
-                  <span className="legend ema-legend">
-                    <i />
-                    EMA 10
-                  </span>
-                )}
-                <span>较早 → 最近</span>
-              </div>
-              <div className="chart-wrap">
-                <TrendChart
-                  data={stats.series}
-                  metric={metric}
-                  ema={stats.allComparable}
-                />
-              </div>
-              <div className="trend-caption">
-                <span>
-                  {delta !== null ? (
-                    <ArrowUpRight size={16} />
-                  ) : (
-                    <Info size={16} />
-                  )}{' '}
-                  {delta === null
-                    ? '暂不判断 ELO 趋势'
-                    : delta > 0
-                      ? '近期队伍 ELO 上行'
-                      : delta < 0
-                        ? '近期队伍 ELO 下行'
-                        : '近期队伍 ELO 持平'}
-                </span>
-                <small>
-                  {delta === null
-                    ? '需连续 10 场同模式、且 ELO 完整的对局'
-                    : '近 5 场较前 5 场平均值 ' +
-                      (delta >= 0 ? '+' : '') +
-                      fmt(delta)}
-                </small>
-              </div>
-              <div className="rolling-stats">
-                {[5, 10, 20, 30].map((n) => (
-                  <div key={n}>
-                    <span>最近 {n} 场均值</span>
-                    <strong>{fmt(stats.windows[n])}</strong>
-                  </div>
+              <div className="win-segments">
+                {[...data.rows].reverse().map((r) => (
+                  <i
+                    key={r.id}
+                    title={r.win === null ? "未判定" : r.win ? "胜" : "负"}
+                    className={r.win === null ? "unknown" : r.win ? "win" : "loss"}
+                  />
                 ))}
               </div>
+              <small>
+                {stats.wins} 胜 {stats.losses} 负
+                {stats.unknown
+                  ? " · " + stats.unknown + " 场未判定"
+                  : " · 最近 " + data.rows.length + " 场"}
+              </small>
             </article>
-            <aside className="panel elo-panel">
-              <div className="panel-heading">
-                <div>
-                  <p className="eyebrow">SOURCE SNAPSHOT</p>
-                  <h3>数据源 ELO 摘要</h3>
+            <article className="stat">
+              <p>
+                整体 KDA
+                <Crosshair size={17} />
+              </p>
+              <div className="stat-value">
+                {fmt(stats.kda)}
+                <span>: 1</span>
+              </div>
+              <div className="stat-foot">
+                <b>{fmt(stats.kills)}</b> / {fmt(stats.deaths)} / <b>{fmt(stats.assists)}</b>
+              </div>
+              <small>场均击杀 / 死亡 / 助攻 · {stats.kdaCount} 场</small>
+            </article>
+            <article className="stat">
+              <p>
+                平均对局评分
+                <Activity size={17} />
+              </p>
+              <div className="stat-value">
+                {fmt(stats.score)}
+                <span>分</span>
+              </div>
+              <div className="stat-foot">
+                {data.rows.filter((r) => r.mvp).length} 次 MVP
+                <span className="subtle">·</span>
+                {data.rows.filter((r) => r.svp).length} 次 SVP
+              </div>
+              <small>数据源对局评分 · {stats.scoreCount} 场有值</small>
+            </article>
+            {data.mode === "mayhem" ? (
+              <article className="stat">
+                <p>
+                  平均参团率
+                  <Swords size={17} />
+                </p>
+                <div className="stat-value">
+                  {fmt(performance(data.rows).participation.value)}
+                  <span>%</span>
                 </div>
-                <Info size={17} className="subtle" />
-              </div>
-              <p className="elo-label">
-                {shownSummaryLabel === '单双' ? '单双排位' : shownSummaryLabel}
-              </p>
-              <div className="elo-value">
-                {fmt(data.elos[shownSummaryLabel])}
-                <span>ELO</span>
-              </div>
-              <div className="summary-rank">
-                <RankLabel value={data.elos[shownSummaryLabel]} />
-                <a href="#elo-reference">
-                  段位对照 <ChevronRight size={13} />
-                </a>
-              </div>
-              <div className="elo-other">
-                {['单双', '大乱斗', '灵活']
-                  .filter((k) => k !== shownSummaryLabel)
-                  .map((k) => (
-                    <span key={k}>
-                      {k}
-                      <b>{fmt(data.elos[k])}</b>
-                      <RankLabel value={data.elos[k]} />
+                <div className="stat-foot">团战参与，不只看击杀</div>
+                <small>
+                  {performance(data.rows).participation.count}/{data.rows.length} 场有值 ·
+                  数据源百分比
+                </small>
+              </article>
+            ) : (
+              <article className="stat">
+                <p>
+                  平均 Team ELO
+                  <TrendingUp size={17} />
+                </p>
+                <div className="stat-value">{fmt(stats.elo)}</div>
+                <div className="stat-foot">
+                  <RankLabel value={stats.elo} />
+                  {stats.elo === null && (
+                    <span>
+                      {stats.eloCount === 0
+                        ? data.loading
+                          ? "详情加载中…"
+                          : "数据源未提供"
+                        : "样本不满足同模式完整条件"}
                     </span>
-                  ))}
-              </div>
-              <p className="data-caution">
-                参考段位按原站分数对照表换算。摘要与单场 Team ELO
-                不同，都不能视为已验证的个人 MMR。
-              </p>
-              <div className="elo-range">
-                <span>
-                  样本最高<b>{fmt(stats.max)}</b>
-                </span>
-                <span>
-                  样本最低<b>{fmt(stats.min)}</b>
-                </span>
-                <span>
-                  EMA 10<b>{fmt(stats.ema)}</b>
-                </span>
-              </div>
-            </aside>
+                  )}
+                </div>
+                <small>
+                  本人所在队伍 · {stats.eloCount}/{data.rows.length} 场有值
+                </small>
+              </article>
+            )}
           </section>
-        )}
-        <section className="panel hero-panel">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">CHAMPION POOL</p>
-              <h3>英雄表现</h3>
-            </div>
-            <span className="subtle">按使用场次排序 · 本次样本</span>
-          </div>
-          <div className="hero-grid">
-            {stats.heroes.map((h) => (
-              <article className="hero-item" key={h.id}>
-                <div className="champion">
-                  <ChampionIcon id={h.id} />
+          <PerformanceReview
+            rows={data.rows}
+            mayhem={data.mode === "mayhem"}
+            onSelect={setSelected}
+          />
+          {data.mode === "mayhem" ? (
+            <MayhemTrend data={data} />
+          ) : (
+            <section className="analysis-grid">
+              <article className="panel trend-panel">
+                <div className="panel-heading">
                   <div>
-                    <strong>{h.name}</strong>
-                    <small>
-                      {h.count} 场 · 平均评分 {fmt(mean(h.score))}
-                    </small>
+                    <p className="eyebrow">PERFORMANCE TREND</p>
+                    <h3>{metric === "teamElo" ? "Team ELO 趋势" : "对局评分趋势"}</h3>
+                  </div>
+                  <div className="segmented" aria-label="趋势指标">
+                    {(["teamElo", "score"] as const).map((key) => (
+                      <Button
+                        key={key}
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        aria-pressed={metric === key}
+                        onClick={() => setMetric(key)}
+                      >
+                        {key === "teamElo" ? "Team ELO" : "评分"}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-                <div className="hero-win">
-                  <span>
-                    {h.wins} 胜 {h.losses} 负
+                <div className="chart-legends">
+                  <span className="legend">
+                    <i />
+                    {metric === "teamElo" ? "本人所在队伍" : "单场评分"}
                   </span>
-                  <strong>
-                    {h.wins + h.losses
-                      ? fmt((h.wins / (h.wins + h.losses)) * 100) + '%'
-                      : '—'}
-                  </strong>
+                  {metric === "teamElo" && stats.allComparable && (
+                    <span className="legend ema-legend">
+                      <i />
+                      EMA 10
+                    </span>
+                  )}
+                  <span>较早 → 最近</span>
                 </div>
-                <div className="hero-bar" aria-hidden="true">
-                  <i
-                    style={{
-                      width:
-                        (h.wins + h.losses
-                          ? (h.wins / (h.wins + h.losses)) * 100
-                          : 0) + '%',
-                    }}
-                  />
+                <div className="chart-wrap">
+                  <TrendChart data={stats.series} metric={metric} ema={stats.allComparable} />
+                </div>
+                <div className="trend-caption">
+                  <span>
+                    {delta !== null ? <ArrowUpRight size={16} /> : <Info size={16} />}{" "}
+                    {delta === null
+                      ? "暂不判断 ELO 趋势"
+                      : delta > 0
+                        ? "近期队伍 ELO 上行"
+                        : delta < 0
+                          ? "近期队伍 ELO 下行"
+                          : "近期队伍 ELO 持平"}
+                  </span>
+                  <small>
+                    {delta === null
+                      ? "需连续 10 场同模式、且 ELO 完整的对局"
+                      : "近 5 场较前 5 场平均值 " + (delta >= 0 ? "+" : "") + fmt(delta)}
+                  </small>
+                </div>
+                <div className="rolling-stats">
+                  {[5, 10, 20, 30].map((n) => (
+                    <div key={n}>
+                      <span>最近 {n} 场均值</span>
+                      <strong>{fmt(stats.windows[n])}</strong>
+                    </div>
+                  ))}
                 </div>
               </article>
-            ))}
-            {!stats.heroes.length && <p className="empty-note">暂无英雄数据</p>}
-          </div>
-        </section>
-        <section className="panel match-panel">
+              <aside className="panel elo-panel">
+                <div className="panel-heading">
+                  <div>
+                    <p className="eyebrow">SOURCE SNAPSHOT</p>
+                    <h3>数据源 ELO 摘要</h3>
+                  </div>
+                  <Info size={17} className="subtle" />
+                </div>
+                <p className="elo-label">
+                  {shownSummaryLabel === "单双" ? "单双排位" : shownSummaryLabel}
+                </p>
+                <div className="elo-value">
+                  {fmt(data.elos[shownSummaryLabel])}
+                  <span>ELO</span>
+                </div>
+                <div className="summary-rank">
+                  <RankLabel value={data.elos[shownSummaryLabel]} />
+                  <a href="#elo-reference">
+                    段位对照 <ChevronRight size={13} />
+                  </a>
+                </div>
+                <div className="elo-other">
+                  {["单双", "大乱斗", "灵活"]
+                    .filter((k) => k !== shownSummaryLabel)
+                    .map((k) => (
+                      <span key={k}>
+                        {k}
+                        <b>{fmt(data.elos[k])}</b>
+                        <RankLabel value={data.elos[k]} />
+                      </span>
+                    ))}
+                </div>
+                <p className="data-caution">
+                  参考段位按原站分数对照表换算。摘要与单场 Team ELO 不同，都不能视为已验证的个人
+                  MMR。
+                </p>
+                <div className="elo-range">
+                  <span>
+                    样本最高<b>{fmt(stats.max)}</b>
+                  </span>
+                  <span>
+                    样本最低<b>{fmt(stats.min)}</b>
+                  </span>
+                  <span>
+                    EMA 10<b>{fmt(stats.ema)}</b>
+                  </span>
+                </div>
+              </aside>
+            </section>
+          )}
+          <section className="panel hero-panel">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">CHAMPION POOL</p>
+                <h3>英雄表现</h3>
+              </div>
+              <span className="subtle">按使用场次排序 · 本次样本</span>
+            </div>
+            <div className="hero-grid">
+              {stats.heroes.map((h) => (
+                <article className="hero-item" key={h.id}>
+                  <div className="champion">
+                    <ChampionIcon id={h.id} />
+                    <div>
+                      <strong>{h.name}</strong>
+                      <small>
+                        {h.count} 场 · 平均评分 {fmt(mean(h.score))}
+                      </small>
+                    </div>
+                  </div>
+                  <div className="hero-win">
+                    <span>
+                      {h.wins} 胜 {h.losses} 负
+                    </span>
+                    <strong>
+                      {h.wins + h.losses ? fmt((h.wins / (h.wins + h.losses)) * 100) + "%" : "—"}
+                    </strong>
+                  </div>
+                  <div className="hero-bar" aria-hidden="true">
+                    <i
+                      style={{
+                        width: (h.wins + h.losses ? (h.wins / (h.wins + h.losses)) * 100 : 0) + "%",
+                      }}
+                    />
+                  </div>
+                </article>
+              ))}
+              {!stats.heroes.length && <p className="empty-note">暂无英雄数据</p>}
+            </div>
+          </section>
+        </OptionalAnalysis>
+        <section
+          className={"panel match-panel" + (data.mode === "mayhem" ? " casual-matches" : "")}
+        >
           <div className="panel-heading">
             <div>
               <p className="eyebrow">RECENT MATCHES</p>
@@ -843,9 +762,9 @@ export default function Home() {
             </div>
             <div className="segmented" aria-label="战绩胜负筛选">
               {[
-                ['all', '全部'],
-                ['win', '胜利'],
-                ['loss', '失败'],
+                ["all", "全部"],
+                ["win", "胜利"],
+                ["loss", "失败"],
               ].map(([value, label]) => (
                 <Button
                   type="button"
@@ -870,15 +789,14 @@ export default function Home() {
                 onClick={() => setSelected(r)}
                 aria-label={
                   r.champion +
-                  ' ' +
+                  " " +
                   r.date +
-                  ' ' +
-                  (r.win === null ? '未判定' : r.win ? '胜利' : '失败') +
-                  ' 详情'
+                  " " +
+                  (r.win === null ? "未判定" : r.win ? "胜利" : "失败") +
+                  " 详情"
                 }
                 className={
-                  'match-row ' +
-                  (r.win === null ? 'is-unknown' : r.win ? 'is-win' : 'is-loss')
+                  "match-row " + (r.win === null ? "is-unknown" : r.win ? "is-win" : "is-loss")
                 }
                 key={r.id}
               >
@@ -897,31 +815,31 @@ export default function Home() {
                 </div>
                 <div className="match-kda">
                   <strong>
-                    {fmt(r.kills)} <span>/ {fmt(r.deaths)} /</span>{' '}
-                    {fmt(r.assists)}
+                    {fmt(r.kills)} <span>/ {fmt(r.deaths)} /</span> {fmt(r.assists)}
                   </strong>
                   <small>
-                    {r.detailState === 'pending'
-                      ? '详情加载中…'
-                      : duration(r.duration)}
+                    {r.detailState === "pending" ? "详情加载中…" : duration(r.duration)}
                   </small>
                 </div>
                 <div className="match-score">
-                  <strong>{fmt(r.score)}</strong>
-                  <small>对局评分</small>
+                  <strong>
+                    {data.mode === "mayhem"
+                      ? championRoles(r.championId)
+                          .map((role) => ROLE_INFO[role].label)
+                          .join(" / ") || "待收录"
+                      : fmt(r.score)}
+                  </strong>
+                  <small>{data.mode === "mayhem" ? "英雄定位" : "对局评分"}</small>
                 </div>
-                <div className="match-elo">
-                  <strong>{fmt(r.teamElo)}</strong>
-                  <small>Team ELO</small>
-                  <RankLabel value={r.teamElo} />
-                </div>
-                <span
-                  className={
-                    'result ' +
-                    (r.win === null ? 'unknown' : r.win ? 'win' : 'loss')
-                  }
-                >
-                  {r.win === null ? '未判定' : r.win ? '胜利' : '失败'}
+                {data.mode !== "mayhem" && (
+                  <div className="match-elo">
+                    <strong>{fmt(r.teamElo)}</strong>
+                    <small>Team ELO</small>
+                    <RankLabel value={r.teamElo} />
+                  </div>
+                )}
+                <span className={"result " + (r.win === null ? "unknown" : r.win ? "win" : "loss")}>
+                  {r.win === null ? "未判定" : r.win ? "胜利" : "失败"}
                 </span>
                 <ChevronRight size={16} className="subtle" />
               </button>
@@ -930,67 +848,70 @@ export default function Home() {
               <div className="empty-note">
                 <Swords size={27} />
                 <strong>
-                  {data.rows.length
-                    ? '没有符合筛选的战绩'
-                    : '该模式暂无可展示的战绩'}
+                  {data.rows.length ? "没有符合筛选的战绩" : "该模式暂无可展示的战绩"}
                 </strong>
                 <p>
-                  {data.rows.length
-                    ? '切换到“全部”查看其他对局。'
-                    : '可更换模式或大区后重新查询。'}
+                  {data.rows.length ? "切换到“全部”查看其他对局。" : "可更换模式或大区后重新查询。"}
                 </p>
               </div>
             )}
           </div>
         </section>
-        <EloReference />
-        <section className="source-notes" id="data-notes">
-          <Info size={18} />
-          <div>
-            <h3>读懂这些数字</h3>
-            <p>
-              Team ELO 是本人所在队伍的单场指标。均值和 EMA
-              仅在样本属于同一模式且字段完整时计算；EMA 采用跨度
-              10、最早样本初始化。“—”表示数据缺失、模式混合或场数不足。KDA
-              =（总击杀 + 总助攻）÷ max（总死亡，1）。
-            </p>
-            <p>
-              战绩由{' '}
-              <a href="https://a.lzyumi.top/" target="_blank" rel="noreferrer">
-                lzyumi 公开查询
-              </a>
-              提供，日期沿用来源，未补全年份。统计只覆盖当前返回的对局，不代表完整历史。
-              {data.isSample
-                ? '当前展示采集于 ' +
-                  data.fetchedAt.slice(0, 10) +
-                  ' 的真实示例，点击查询可获取新结果。'
-                : ''}
-            </p>
-            <p>
-              本页直接查询公开数据源，Riot ID 和大区会发送给该数据源。重复查询可复用 1 分钟内的结果，成功取得的单场详情最多缓存 6
-              小时。缓存可能提前失效；点击“更新数据”可跳过缓存。显示的查询时间保留原采集时间，单场详情标注各自采集时间。
-            </p>
-            <p id="mayhem-rules">
-              海斗称号规则：至少 10
-              场且详情已取得，按顺序匹配“团战常驻选手”（全部场次参团率均值 ≥
-              70%）、“助攻发动机”（全部场次场均助攻 ≥
-              20）、“火力担当”（全部场次每分钟伤害 ≥
-              2500）、“胜场收集家”（胜负完整且胜率 ≥
-              70%）；否则显示“海斗实战派”。阈值为本站趣味标签规则，没有全服样本校准，也不用于推导段位。高光取本次样本单场最高值，同值时选较近一场。
-            </p>
-            {data.warnings.map((w) => (
-              <p key={w} className="source-warning">
-                {w}
+        {data.mode !== "mayhem" && <EloReference />}
+        <details className="source-disclosure" id="data-notes">
+          <summary>
+            画像与数据说明 <ChevronRight size={16} />
+          </summary>
+          <section className="source-notes">
+            <Info size={18} />
+            <div>
+              <h3>读懂这些数字</h3>
+              <p>
+                Team ELO 是本人所在队伍的单场指标。均值和 EMA
+                仅在样本属于同一模式且字段完整时计算；EMA 采用跨度
+                10、最早样本初始化。“—”表示数据缺失、模式混合或场数不足。KDA =（总击杀 + 总助攻）÷
+                max（总死亡，1）。
               </p>
-            ))}
-          </div>
-        </section>
+              <p>
+                战绩由{" "}
+                <a href="https://a.lzyumi.top/" target="_blank" rel="noreferrer">
+                  lzyumi 公开查询
+                </a>
+                提供，日期沿用来源，未补全年份。统计只覆盖当前返回的对局，不代表完整历史。
+                {data.isSample
+                  ? "当前展示采集于 " +
+                    data.fetchedAt.slice(0, 10) +
+                    " 的真实示例，点击查询可获取新结果。"
+                  : ""}
+              </p>
+              <p>
+                本页直接查询公开数据源，Riot ID 和大区会发送给该数据源。重复查询可复用 1
+                分钟内的结果，成功取得的单场详情最多缓存 6
+                小时。缓存可能提前失效；点击“更新数据”可跳过缓存。显示的查询时间保留原采集时间，单场详情标注各自采集时间。
+              </p>
+              <p id="mayhem-rules">
+                玩家画像按本次海斗出场英雄的官方定位生成，双定位平分权重，至少识别 5
+                场且覆盖八成样本才生成类型。海斗随机选人会影响画像，不代表操作水平。 趣味标签：至少
+                5 场且英雄全不重复为“英雄不重样”；否则某英雄至少出场 3 次为“熟面孔搭子”；否则至少 7
+                个英雄为“英雄体验家”。 至少 5 场、详情和指标齐全时，平均参团率 ≥ 70%
+                为“团战打卡人”，场均助攻 ≥ 20 为“助攻发射机”。本批海斗最近连续获胜至少 3
+                场为“连胜好心情”。按上述顺序最多显示 3 个标签。
+                单场高光只比较本次样本，同值时选较近一场。
+              </p>
+              {data.warnings.map((w) => (
+                <p key={w} className="source-warning">
+                  {w}
+                </p>
+              ))}
+            </div>
+          </section>
+        </details>
         <footer>
           <span className="brand-mini">
             <Crosshair size={16} />
             对局透镜
           </span>
-          <p>看见数据，理解表现。</p>
+          <p>每种玩法，都有自己的快乐。</p>
           <span>LOL MATCH ANALYTICS</span>
         </footer>
       </main>
@@ -1014,17 +935,13 @@ export default function Home() {
                   <h3>{selected.champion}</h3>
                   <p>
                     {positions[selected.position] ??
-                      (selected.position && selected.position !== 'Invalid'
+                      (selected.position && selected.position !== "Invalid"
                         ? selected.position
-                        : '位置未提供')}
+                        : "位置未提供")}
                   </p>
                 </div>
-                <span className={'result ' + (selected.win ? 'win' : 'loss')}>
-                  {selected.win === null
-                    ? '未判定'
-                    : selected.win
-                      ? '胜利'
-                      : '失败'}
+                <span className={"result " + (selected.win ? "win" : "loss")}>
+                  {selected.win === null ? "未判定" : selected.win ? "胜利" : "失败"}
                 </span>
               </div>
               <div className="detail-meta">
@@ -1039,8 +956,7 @@ export default function Home() {
               <div className="detail-kda">
                 <span>K / D / A</span>
                 <strong>
-                  {fmt(selected.kills)} <i>/ {fmt(selected.deaths)} /</i>{' '}
-                  {fmt(selected.assists)}
+                  {fmt(selected.kills)} <i>/ {fmt(selected.deaths)} /</i> {fmt(selected.assists)}
                 </strong>
               </div>
               <div className="detail-grid">
@@ -1063,18 +979,17 @@ export default function Home() {
               </div>
               <div className="detail-grid detail-rates">
                 {[
-                  ['dpm', '每分钟伤害'],
-                  ['gpm', '每分钟经济'],
-                  ['participation', '参团率 (%)'],
-                  ['deaths10', '每 10 分钟死亡'],
+                  ["dpm", "每分钟伤害"],
+                  ["gpm", "每分钟经济"],
+                  ["participation", "参团率 (%)"],
+                  ["deaths10", "每 10 分钟死亡"],
                 ].map(([key, label]) => (
                   <div key={key}>
                     <span>{label}</span>
                     <strong>
                       {fmt(
-                        performance([selected])[
-                          key as 'dpm' | 'gpm' | 'participation' | 'deaths10'
-                        ].value,
+                        performance([selected])[key as "dpm" | "gpm" | "participation" | "deaths10"]
+                          .value,
                       )}
                     </strong>
                   </div>
@@ -1099,15 +1014,14 @@ export default function Home() {
                 </div>
               </div>
               <p className="detail-note">
-                {selected.note ?? '队伍 ELO 来自该场详情，不等同于个人 MMR。'}{' '}
+                {selected.note ?? "队伍 ELO 来自该场详情，不等同于个人 MMR。"}{" "}
                 {selected.detailsFetchedAt
-                  ? '详情采集于 ' +
-                    new Date(selected.detailsFetchedAt).toLocaleString(
-                      'zh-CN',
-                      { timeZone: 'Asia/Shanghai' },
-                    ) +
-                    '。'
-                  : ''}{' '}
+                  ? "详情采集于 " +
+                    new Date(selected.detailsFetchedAt).toLocaleString("zh-CN", {
+                      timeZone: "Asia/Shanghai",
+                    }) +
+                    "。"
+                  : ""}{" "}
                 日期按来源展示，未提供年份。
               </p>
             </div>
