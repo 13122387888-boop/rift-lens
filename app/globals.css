@@ -3149,3 +3149,113 @@ footer > span:last-child {
     font-size: 20px;
   }
 }
+
+/* Portraits keep their own space when names or mobile text grow. */
+.champion-portrait {
+  display: block;
+  flex: 0 0 auto;
+  object-fit: cover;
+  aspect-ratio: 1;
+  max-width: none;
+}
+.champion > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.moment-icon {
+  display: block;
+  width: 43px;
+  min-width: 43px;
+  height: 43px;
+}
+.mayhem-moment[data-slot="button"] {
+  display: grid;
+  grid-template-columns: 43px minmax(0, 1fr) auto 18px;
+  width: 100%;
+  align-items: center;
+}
+.mayhem-moment > span:nth-child(2),
+.mayhem-moment > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.champion-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+.champion-tag {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #425b68;
+  background: #29424e;
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--tag-color);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.champion-tag.personal {
+  background: #3c3528;
+  border-color: #6c5938;
+}
+.persona-heroes .champion-tags {
+  justify-content: center;
+}
+.persona-hero-name small {
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .persona-heroes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .persona-heroes > div {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px 12px;
+    align-items: center;
+    padding: 13px;
+    text-align: left;
+  }
+  .persona-heroes img,
+  .persona-heroes .champion-placeholder {
+    width: 48px;
+    height: 48px;
+    margin: 0;
+  }
+  .persona-heroes strong {
+    font-size: 16px;
+  }
+  .persona-heroes .champion-tags {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    margin-top: 0;
+  }
+  .persona-heroes .champion-tag {
+    font-size: 14px;
+  }
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero-item + .hero-item {
+    border-left: 0;
+    border-top: 1px solid #2a3c47;
+    padding-left: 0;
+    padding-top: 18px;
+  }
+}
+@media (max-width: 360px) {
+  .mayhem-moment[data-slot="button"] {
+    grid-template-columns: 43px minmax(0, 1fr) auto;
+  }
+  .mayhem-moment > svg {
+    display: none;
+  }
+}

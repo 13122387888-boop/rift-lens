@@ -14,9 +14,17 @@ function load(file){
 const {mayhemReport,reportText}=load('mayhem-report'),{drawReport,CARD_WIDTH,CARD_HEIGHT}=load('report-image');
 const fixture=require('../lib/mayhem-seed.json');
 const report=mayhemReport(fixture);
-const {playerPersona}=load('player-persona');
+const {playerPersona,championTags}=load('player-persona');
 const catalog=require('../lib/champion-roles.json').champions;
 const rowsFor=ids=>ids.map((championId,i)=>({...fixture.rows[i%fixture.rows.length],id:'role-'+i,championId,champion:catalog[championId]?.name??'未知英雄'}));
+const tagRows=[{...fixture.rows[0],championId:'24',assists:25,damage:60000,participation:80},{...fixture.rows[1],championId:'13',assists:1,damage:1000,participation:10}];
+assert.ok(championTags('24',tagRows).some(t=>t.label==='火力全开'));
+assert.ok(championTags('24',tagRows).some(t=>t.label==='助攻搭子'));
+assert.ok(!championTags('13',tagRows).some(t=>['火力全开','助攻搭子','团战常客'].includes(t.label)));
+assert.ok(championTags('13',tagRows).some(t=>t.label==='一局有缘'));
+assert.ok(championTags('24',tagRows.map(r=>({...r,detailState:'pending'}))).every(t=>!['火力全开','助攻搭子','团战常客'].includes(t.label)));
+assert.ok(championTags('24',tagRows.map(r=>({...r,mode:'ARAM',queue:'极地大乱斗'}))).every(t=>t.kind==='role'));
+assert.ok(championTags('24',tagRows.map(r=>({...r,damage:null,assists:null,participation:null}))).every(t=>!['火力全开','助攻搭子','团战常客'].includes(t.label)));
 const fighter=playerPersona(rowsFor(Array(10).fill('24')));
 assert.equal(fighter.kind,'single');assert.equal(fighter.label,'战士型玩家');
 assert.equal(fighter.distribution.find(r=>r.key==='Fighter').percent,100);
@@ -60,8 +68,8 @@ function context(){
 }
 for(const style of ['overview','highlight']){
   const ctx=context();drawReport(ctx,{data:fixture,report,style,hideName:true,highlight:report.damageMatch,highlightLabel:'本次样本 · 单场伤害最高'});
-  const drawn=ctx.calls.join('\n');assert.ok(drawn.includes('神秘海斗玩家'));assert.equal(drawn.includes(fixture.player.split('#')[0]),false);assert.ok(drawn.includes('非段位 / 全服排名'));assert.ok(drawn.includes('真实样本'));
-  if(style==='overview'){for(const tag of report.persona.tags)assert.ok(drawn.includes(tag.title));assert.ok(drawn.includes(report.persona.title));assert.ok(drawn.includes(report.persona.label));assert.equal(drawn.includes('每分钟伤害'),false);assert.equal(drawn.includes('整体 KDA'),false);}
+  const drawn=ctx.calls.join('\n');assert.equal(/lzyumi/i.test(drawn),false);assert.ok(drawn.includes('神秘海斗玩家'));assert.equal(drawn.includes(fixture.player.split('#')[0]),false);assert.ok(drawn.includes('非段位 / 全服排名'));assert.ok(drawn.includes('真实样本'));
+  if(style==='overview'){assert.ok(drawn.includes('常选的英雄'));for(const hero of report.persona.heroes)for(const tag of hero.tags)assert.ok(drawn.includes(tag.label));for(const tag of report.persona.tags)assert.ok(drawn.includes(tag.title));assert.ok(drawn.includes(report.persona.title));assert.ok(drawn.includes(report.persona.label));assert.equal(drawn.includes('每分钟伤害'),false);assert.equal(drawn.includes('整体 KDA'),false);}
 }
 console.log('PASS: official champion tags, dual-role splitting, percentages sum to 100, mixed/insufficient/unknown coverage, mode isolation, missing-detail badge gates, streak boundaries and persona PNG text.');
 console.log('PASS: observed mayhem sample, evidence-bound titles, insufficient/partial/mixed data, highlight selection and tie order, private-name text/image exports, both drawing paths.');

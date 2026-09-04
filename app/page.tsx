@@ -39,7 +39,7 @@ import { AREAS, MODES, validateQuery, type Snapshot, type Match, type Mode } fro
 import sample from "@/lib/mayhem-seed.json";
 import { MayhemReportPanel, MayhemTrend } from "@/components/mayhem-report";
 import { PerformanceReview } from "@/components/performance-review";
-import { OptionalAnalysis } from "@/components/player-persona";
+import { OptionalAnalysis, ChampionTags } from "@/components/player-persona";
 import { CompanionsPanel } from "@/components/companions";
 import { championRoles, playerPersona, ROLE_INFO } from "@/lib/player-persona";
 import { performance } from "@/lib/performance";
@@ -731,6 +731,7 @@ export default function Home() {
                       </small>
                     </div>
                   </div>
+                  <ChampionTags id={h.id} rows={data.rows} />
                   <div className="hero-win">
                     <span>
                       {h.wins} 胜 {h.losses} 负
@@ -875,11 +876,7 @@ export default function Home() {
                 max（总死亡，1）。
               </p>
               <p>
-                战绩由{" "}
-                <a href="https://a.lzyumi.top/" target="_blank" rel="noreferrer">
-                  lzyumi 公开查询
-                </a>
-                提供，日期沿用来源，未补全年份。统计只覆盖当前返回的对局，不代表完整历史。
+                战绩由第三方公开数据源提供，日期沿用来源，未补全年份。统计只覆盖当前返回的对局，不代表完整历史。
                 {data.isSample
                   ? "当前展示采集于 " +
                     data.fetchedAt.slice(0, 10) +
@@ -898,6 +895,9 @@ export default function Home() {
                 个英雄为“英雄体验家”。 至少 5 场、详情和指标齐全时，平均参团率 ≥ 70%
                 为“团战打卡人”，场均助攻 ≥ 20 为“助攻发射机”。本批海斗最近连续获胜至少 3
                 场为“连胜好心情”。按上述顺序最多显示 3 个标签。
+                英雄卡标签单独按该英雄在本次海斗中的表现计算：出场至少 3 次为“常驻嘉宾”；
+                详情完整且场均伤害至少 5 万为“火力全开”，场均助攻至少 20 为“助攻搭子”，
+                平均参团率至少 70% 为“团战常客”。按此顺序最多显示两个；未触发时用出场次数描述。
                 单场高光只比较本次样本，同值时选较近一场。
               </p>
               {data.warnings.map((w) => (

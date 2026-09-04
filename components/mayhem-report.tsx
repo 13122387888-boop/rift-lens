@@ -247,7 +247,7 @@ export function MayhemReportPanel({
             </p>
             {style === "overview" && (
               <details className="persona-more">
-                <summary>查看画像依据与常玩英雄</summary>
+                <summary>查看画像依据与常选的英雄</summary>
                 <PersonaDetails persona={report.persona} />
               </details>
             )}

@@ -20,7 +20,7 @@ export function loadChampionPortrait(id: string): Promise<HTMLImageElement | nul
       img.onerror = null;
       resolve(value);
     };
-    const timer = setTimeout(() => finish(null), 6000);
+    const timer = setTimeout(() => finish(null), 15000);
     img.onload = () => finish(img);
     img.onerror = () => finish(null);
     // These assets are served beside the app, including on the Pages subpath.

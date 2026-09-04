@@ -11,7 +11,14 @@ import {
   Sparkles,
 } from "lucide-react";
 import { ChampionIcon } from "./analytics";
-import { ROLE_SOURCE, type PlayerPersona } from "@/lib/player-persona";
+import { ROLE_SOURCE, championTags, type ChampionTag, type PlayerPersona } from "@/lib/player-persona";
+
+import type { Match } from "@/lib/model";
+
+export function ChampionTags({ id, rows, tags }: { id?: string; rows?: Match[]; tags?: ChampionTag[] }) {
+  const labels = tags ?? championTags(id ?? "", rows ?? []);
+  return <span className="champion-tags">{labels.map((tag) => <span key={tag.label} className={"champion-tag " + tag.kind} title={tag.evidence} style={{ "--tag-color": tag.color } as CSSProperties}>{tag.label}</span>)}</span>;
+}
 
 const icons = {
   Fighter: Swords,
@@ -67,17 +74,15 @@ export function PersonaDetails({ persona }: { persona: PlayerPersona }) {
       {persona.heroes.length > 0 && (
         <>
           <div className="persona-role-heading">
-            <span>这几位，陪你上过场</span>
-            <small>按出场次数</small>
+            <span>常选的英雄</span>
+            <small>本次出场最多</small>
           </div>
           <div className="persona-heroes">
             {persona.heroes.map((hero) => (
               <div key={hero.id}>
                 <ChampionIcon id={hero.id} />
-                <strong>{hero.name}</strong>
-                <small>
-                  {hero.count} 场 · {hero.roleLabel}
-                </small>
+                <div className="persona-hero-name"><strong>{hero.name}</strong><small>本次出场 {hero.count} 场</small></div>
+                <ChampionTags tags={hero.tags} />
               </div>
             ))}
           </div>

@@ -23,7 +23,7 @@ export function ChampionIcon({ id }: { id: string }) {
       <Crosshair size={23} />
     </span>
   ) : (
-    <img width={43} height={43} src={path} alt="" loading="lazy" onError={() => setFailedId(id)} />
+    <img className="champion-portrait" width={43} height={43} src={path} alt="" decoding="async" onError={() => setFailedId(id)} />
   );
 }
 export function TrendChart({

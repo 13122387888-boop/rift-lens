@@ -18,6 +18,7 @@ export function drawReport(
   ctx: CanvasRenderingContext2D,
   options: CardOptions,
   portrait: CanvasImageSource | null = null,
+  heroPortraits: Record<string, CanvasImageSource | null> = {},
 ) {
   const { data, report, style, hideName, highlight, highlightLabel } = options;
   const W = CARD_WIDTH,
@@ -145,7 +146,7 @@ export function drawReport(
     text(persona.title, 68, 270, 86, "#fff0cd", 700);
     text(persona.label, 72, 377, 36, persona.color, 600);
     text(persona.quote, 72, 429, 29, "#bed0dc");
-    panel(72, 491, 936, 287);
+    panel(72, 491, 936, 252);
     text("我的英雄口味", 98, 510, 28, "#f4e6c8", 600);
     text(
       "定位已识别 " + persona.classified + "/" + persona.rows.length + " 场",
@@ -158,7 +159,7 @@ export function drawReport(
     );
     persona.distribution.forEach((role, i) => {
       const x = 98 + (i % 2) * 460,
-        y = 566 + Math.floor(i / 2) * 67;
+        y = 560 + Math.floor(i / 2) * 58;
       text(role.label, x, y, 29, role.color, 600, 90);
       ctx.fillStyle = "#3b4b5d";
       ctx.fillRect(x + 86, y + 11, 236, 11);
@@ -166,12 +167,31 @@ export function drawReport(
       ctx.fillRect(x + 86, y + 11, (236 * role.share) / 100, 11);
       text(persona.classified ? role.percent + "%" : "—", x + 343, y, 28, "#e9eef2", 500, 85);
     });
-    text("陪我上过场的英雄", 72, 810, 27, "#a7c0d0", 500);
+    text("常选的英雄", 72, 765, 27, "#a7c0d0", 500);
+    text("本次出场最多", 799, 765, 23, "#97b4c8", 400, 209);
     persona.heroes.forEach((hero, i) => {
       const x = 72 + i * 318;
-      panel(x, 857, 300, 107);
-      text(hero.name, x + 20, 875, 31, "#f2e4c9", 600, 264);
-      text(hero.count + " 场 · " + hero.roleLabel, x + 20, 925, 23, "#a6bcca", 400, 268);
+      panel(x, 808, 300, 175);
+      const avatar = heroPortraits[hero.id];
+      if (avatar) ctx.drawImage(avatar, x + 16, 824, 80, 80);
+      else {
+        ctx.fillStyle = "#324e59";
+        ctx.fillRect(x + 16, 824, 80, 80);
+        text(hero.name.slice(0, 1), x + 37, 843, 38, "#e4c78e", 600, 62);
+      }
+      text(hero.name, x + 110, 826, 27, "#f2e4c9", 600, 176);
+      text(hero.count + " 场", x + 110, 869, 23, "#a6bcca", 400, 176);
+      [hero.tags.filter(t => t.kind === "role"), hero.tags.filter(t => t.kind === "personal")].forEach((tags, row) => {
+        let offset = 16;
+        tags.forEach(tag => {
+          ctx.font = '500 21px "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif';
+          const width = ctx.measureText(tag.label).width + 16;
+          ctx.fillStyle = row === 0 ? "#2d4552" : "#423d2d";
+          ctx.fillRect(x + offset, 915 + row * 31, width, 26);
+          text(tag.label, x + offset + 8, 917 + row * 31, 21, tag.color, 500, width - 12);
+          offset += width + 8;
+        });
+      });
     });
     if (!persona.heroes.length) text("查一查战绩，收集你的英雄故事。", 72, 877, 30, "#adc4cf");
     const badges = persona.tags.slice(0, 3);
@@ -211,7 +231,7 @@ export function drawReport(
   text("RIFT LENS", 72, 1208, 31, "#bfdcd9", 600);
   text("趣味战报 · 仅描述本人样本，非段位 / 全服排名", 340, 1212, 23, "#91aeba", 400, 672);
   text(report.coverage, 72, 1260, 23, "#849fae");
-  text("来源 a.lzyumi.top · 缺失值为 —", 630, 1260, 23, "#849fae", 400, 380);
+  text("公开战绩数据 · 缺失值为 —", 630, 1260, 23, "#849fae", 400, 380);
   if (style === "overview")
     text("按本次出场英雄生成 · 随机选人影响画像 · 不代表操作水平", 72, 1301, 21, "#849fae");
 }
@@ -226,11 +246,10 @@ export async function makeReportPng(options: CardOptions): Promise<Blob> {
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("当前浏览器无法生成图片，请使用截图。");
-  const portrait =
-    options.style === "highlight" && options.highlight
-      ? await loadChampionPortrait(options.highlight.championId)
-      : null;
-  drawReport(ctx, options, portrait);
+  const ids = options.style === "highlight" && options.highlight
+    ? [options.highlight.championId] : options.report.persona.heroes.map((hero) => hero.id);
+  const portraits = Object.fromEntries(await Promise.all(ids.map(async (id) => [id, await loadChampionPortrait(id)] as const)));
+  drawReport(ctx, options, options.highlight ? portraits[options.highlight.championId] ?? null : null, portraits);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("图片生成失败，请重试。"))),

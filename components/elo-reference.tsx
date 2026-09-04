@@ -1,5 +1,5 @@
 'use client';
-import { Diamond, ExternalLink } from 'lucide-react';
+import { Diamond } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -16,7 +16,7 @@ export function RankLabel({ value }: { value: number | null | undefined }) {
   return rank ? (
     <span
       className="elo-rank-label"
-      title="按 lzyumi 原站对照表换算，仅作数值参考，不是个人实际段位"
+      title="按第三方分数对照表换算，仅作数值参考，不是个人实际段位"
     >
       参考 {rank}
     </span>
@@ -33,18 +33,10 @@ export function EloReference() {
             ELO 分数与段位参考
           </h3>
         </div>
-        <a
-          className="reference-source"
-          href="https://a.lzyumi.top/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          lzyumi 原站对照表
-          <ExternalLink size={13} />
-        </a>
+        <span className="reference-source">非官方数值参考</span>
       </div>
       <p className="reference-intro">
-        原站把分数每 100 分划为一个小段位。这里沿用其参考尺度，不代表 Riot 官方
+        此参考表每 100 分划为一个小段位，沿用第三方数值尺度，不代表 Riot 官方
         MMR，也不改变玩家的实际段位。
       </p>
       <div className="reference-table">
